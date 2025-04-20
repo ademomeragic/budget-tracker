@@ -1,0 +1,17 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+
+# Frontend
+# Node
+node_modules/
+build/
+dist/
+.env
+.cache/
