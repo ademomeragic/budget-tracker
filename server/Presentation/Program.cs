@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Application.Services;
 using Domain.Entities;
+using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +30,7 @@ builder.Services.AddScoped<IRepository<Category>, Repository<Category>>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>(); // Add this line for CategoryService
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Add controllers
 builder.Services.AddControllers();
