@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import '../styles/login.css';
+import React, { useState } from "react";
+import "../auth/authForm.css"; // Adjust the path as necessary
 
 const AuthForm: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
@@ -14,16 +14,19 @@ const AuthForm: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <div className={`container ${isActive ? 'right-panel-active' : ''}`} id="container">
+      <div
+        className={`container ${isActive ? "right-panel-active" : ""}`}
+        id="container"
+      >
         <div className="form-container sign-up-container">
           <form action="#">
-             <div className="form-header">
-                <h1>Create Account</h1>
-                </div>
-                <input type="text" placeholder="Name" />
-                <input type="email" placeholder="Email" />
-                <input type="password" placeholder="Password" />
-                <button>Sign Up</button>
+            <div className="form-header">
+              <h1>Create Account</h1>
+            </div>
+            <input type="text" placeholder="Name" />
+            <input type="email" placeholder="Email" />
+            <input type="password" placeholder="Password" />
+            <button>Sign Up</button>
           </form>
         </div>
         <div className="form-container sign-in-container">
@@ -42,24 +45,41 @@ const AuthForm: React.FC = () => {
             <div className="overlay-panel overlay-left">
               <div className="panel-content">
                 <div className="panel-header">
-                  <h1 id='first-h'>Welcome Back!</h1>
+                  <h1 id="first-h">Welcome Back!</h1>
                 </div>
                 <div className="panel-text">
-                  <p id='first-p'>To keep connected with us please login with your personal info</p>
+                  <p id="first-p">
+                    To keep connected with us please login with your personal
+                    info
+                  </p>
                 </div>
-                
-                <button className="ghost" id='first-btn' onClick={handleSignInClick}>Sign In</button>
+
+                <button
+                  className="ghost"
+                  id="first-btn"
+                  onClick={handleSignInClick}
+                >
+                  Sign In
+                </button>
               </div>
             </div>
             <div className="overlay-panel overlay-right">
               <div className="panel-content">
                 <div className="panel-header">
-                  <h1 id='second-h'>Hello!</h1>
+                  <h1 id="second-h">Hello!</h1>
                 </div>
                 <div className="panel-text">
-                  <p id='second-p'>Enter your personal details and start journey with us</p>
+                  <p id="second-p">
+                    Enter your personal details and start journey with us
+                  </p>
                 </div>
-                <button className="ghost" id='second-btn' onClick={handleSignUpClick}>Sign Up</button>
+                <button
+                  className="ghost"
+                  id="second-btn"
+                  onClick={handleSignUpClick}
+                >
+                  Sign Up
+                </button>
               </div>
             </div>
           </div>

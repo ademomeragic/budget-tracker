@@ -1,52 +1,40 @@
-// src/App.tsx
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import CategoryList from "./components/CategoryList";
-import CreateCategoryForm from "./components/CategoryForm";
-import BudgetList from "./components/BudgetList";
-import CreateBudgetForm from "./components/CreateBudgetForm";
-import AuthForm from "./components/AuthForm";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Sidebar from "./components/sidebar/sidebar";
+import Dashboard from "./pages/dashboard/dashboard";
+import "./App.css";
+import FloatingActionButton from "./components/sidebar/floatingButton/floatingButton";
+import Transactions from "./pages/transaction/transaction";
+import Wallet from "./pages/wallet/wallet";
+import Reports from "./pages/reports/reports";
+import AuthForm from "./pages/auth/authForm";
 
-const App: React.FC = () => {
+function MainLayout() {
+  return (
+    <div className="app-container">
+      <Sidebar />
+      <FloatingActionButton />
+      <div className="content-area">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/reports" element={<Reports />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
   return (
     <Router>
-      <nav>
-        <Link to="/">Home</Link> | <Link to="/categories">Categories</Link> |{" "}
-        <Link to="/budgets">Budgets</Link> |{" "}
-        <Link to="/login">Login</Link>
-      </nav>
       <Routes>
-        <Route
-          path="/categories"
-          element={
-            <>
-              <CreateCategoryForm />
-              <CategoryList />
-            </>
-          }
-        />
-        <Route
-          path="/budgets"
-          element={
-            <>
-              <CreateBudgetForm />
-              <BudgetList />
-            </>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <>
-              <AuthForm />
-            </>
-          }
-        />
+        {/* Auth route without sidebar */}
+        <Route path="/auth" element={<AuthForm />} />
 
-        <Route path="/" element={<h1>Welcome to Budget Tracker</h1>} />
+        {/* All other routes with sidebar */}
+        <Route path="*" element={<MainLayout />} />
       </Routes>
     </Router>
   );
-};
-
-export default App;
+}
