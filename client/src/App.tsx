@@ -29,10 +29,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Auth route without sidebar */}
         <Route path="/auth" element={<AuthForm />} />
-
-        {/* All other routes with sidebar */}
         <Route path="*" element={<MainLayout />} />
       </Routes>
     </Router>

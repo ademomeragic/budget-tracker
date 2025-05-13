@@ -1,16 +1,33 @@
+/* App.css */
 .app-container {
   display: flex;
   min-height: 100vh;
 }
 
 .content-area {
-  margin-left: 250px;
+  flex: 1;
   padding: 20px;
-  transition: margin-left 0.3s ease;
-  width: calc(100% - 250px);
+  margin-left: 250px; /* Adjust based on your sidebar width */
 }
 
-.sidebar.collapsed ~ .content-area {
-  margin-left: 80px;
-  width: calc(100% - 80px);
+/* Responsive design */
+@media (max-width: 768px) {
+  .content-area {
+    margin-left: 0;
+    padding: 20px 10px;
+  }
+}
+
+/* Global styles */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
 }

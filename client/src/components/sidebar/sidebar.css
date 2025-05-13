@@ -5,81 +5,99 @@
   position: fixed;
   left: 0;
   top: 0;
-  background: #2c3e50;
-  color: white;
-  transition: all 0.3s ease;
+  background: #ffffff;
+  color: #333;
+  border-right: 1px solid #e0e0e0;
   z-index: 100;
-  padding-top: 20px;
+  padding: 20px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Collapsed State */
-.sidebar.collapsed {
-  width: 80px;
-}
-
-/* Collapse Button */
-.collapse-btn {
-  position: absolute;
-  right: -15px;
-  top: 20px;
-  width: 30px;
-  height: 30px;
-  background: white;
-  border: 2px solid #2c3e50;
-  border-radius: 50%;
+.sidebar-content {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #2c3e50;
-  transition: all 0.3s ease;
-}
-
-.collapse-btn:hover {
-  transform: scale(1.1);
+  flex-direction: column;
+  height: 100%;
 }
 
 /* Navigation Items */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 15px;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 15px 20px;
-  color: rgba(255, 255, 255, 0.8);
+  padding: 12px 15px;
+  color: #666;
   text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background-color: #f5f5f5;
+}
+
+.nav-item.active {
+  background-color: #f0f7ff;
+  color: #1a73e8;
+  font-weight: 500;
 }
 
 .nav-icon {
-  font-size: 1.5rem;
-  min-width: 40px;
-}
-
-.signup-btn {
-  background-color: #4677db;
-  color: white;
-  border: none;
-  padding: 10px 10px 20px 30px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  margin: 415px 0;
+  font-size: 1.2rem;
+  margin-right: 15px;
+  width: 24px;
   display: flex;
-  text-align: center;
-  text-decoration: none;
+  align-items: center;
+  justify-content: center;
 }
 
-.signup-btn:hover {
-  background-color: #3b5bbf;
-  box-shadow: 0px 6px 6px rgba(0, 0, 0, 0.2);
-  transition: 0.5s ease;
+.nav-text {
+  font-size: 0.95rem;
 }
 
-.signup-btn span {
-  font-size: 1.5rem;
-  margin-left: 10px;
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+  margin-top: auto;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #1a73e8;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.profile-email {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 2px;
 }

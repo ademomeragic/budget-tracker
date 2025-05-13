@@ -1,49 +1,345 @@
-/* Transactions.css */
-.transactions-page {
+.wallet-page {
   padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: "Arial", sans-serif;
 }
 
-.transaction-card {
+/* Balance Section */
+.balance-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.balance-section h1 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.balance-display {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 5px;
+}
+
+.balance-amount {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.positive {
+  color: #2ecc71;
+}
+
+.negative {
+  color: #e74c3c;
+}
+
+.currency-selector select {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: white;
+}
+
+.conversion-note {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+/* Accounts Section */
+.accounts-section {
+  margin-bottom: 30px;
+}
+
+.accounts-section h2,
+.savings-section h2,
+.chart-section h2 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.account-card,
+.savings-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.account-info,
+.savings-info {
   display: flex;
   justify-content: space-between;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 8px;
+  align-items: center;
 }
 
-.transaction-card.income {
-  background-color: #e8f5e9;
+.account-name,
+.savings-name {
+  font-weight: 500;
+  color: #333;
 }
 
-.transaction-card.expense {
-  background-color: #ffebee;
+.account-balance,
+.savings-balance {
+  font-weight: bold;
+  color: #333;
 }
 
-/* Wallet.css */
-.wallets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin: 20px 0;
+.savings-change {
+  color: #2ecc71;
+  font-weight: bold;
+  margin-right: auto;
+  padding-right: 10px;
 }
 
-.wallet-card {
-  padding: 20px;
-  border-radius: 8px;
-  background: #f5f5f5;
+/* Chart Section */
+.chart-section {
+  margin: 30px 0;
 }
 
-/* Reports.css */
-.charts-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 30px;
+.pie-chart-container {
+  display: flex;
+  justify-content: center;
   margin-top: 20px;
 }
 
-.chart-card {
-  padding: 20px;
+/* Add Wallet Button */
+.add-wallet-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 20px;
+  transition: background 0.3s;
+}
+
+.add-wallet-btn:hover {
+  background: #2980b9;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.wallet-modal {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.wallet-modal h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.confirm-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Add these to your existing wallet.css */
+
+/* Delete Wallet Button */
+.delete-wallet-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.delete-wallet-btn:hover {
+  background: rgba(231, 76, 60, 0.1);
+  transform: scale(1.1);
+}
+
+/* Adjust card positioning to accommodate delete button */
+.account-card,
+.savings-card {
+  position: relative;
+  padding-top: 15px;
+}
+
+/* Wallet Actions */
+.wallet-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.edit-btn,
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.edit-btn {
+  margin-left: 110%;
+  color: #3498db;
+}
+
+.edit-btn:hover {
+  background: rgba(52, 152, 219, 0.1);
+  transform: scale(1.1);
+}
+
+.delete-btn {
+  color: #e74c3c;
+}
+
+.delete-btn:hover {
+  background: rgba(231, 76, 60, 0.1);
+  transform: scale(1.1);
+}
+
+/* Adjust card positioning */
+.account-card,
+.savings-card {
+  position: relative;
+  padding-top: 15px;
+}
+
+.savings-card {
+  padding: 15px 15px 40px; /* Added bottom padding for actions */
+  margin-bottom: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  position: relative;
+}
+
+.savings-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.savings-change {
+  color: #2ecc71;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.savings-name {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.savings-balance {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Currency selector */
+.currency-selector select {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .savings-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .savings-change {
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
 }

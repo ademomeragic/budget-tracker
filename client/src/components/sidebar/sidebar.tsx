@@ -4,49 +4,61 @@ import {
   FiDollarSign,
   FiCreditCard,
   FiPieChart,
-  FiUserPlus, // Signup icon
+  FiUser,
+  FiCalendar,
 } from "react-icons/fi";
 import "./sidebar.css";
+import React from "react";
 
 export default function Sidebar() {
   return (
     <div className="sidebar">
-      {/* Main Navigation */}
-      <nav className="sidebar-nav">
-        <Link to="/" className="nav-item">
-          <span className="nav-icon">
-            <FiHome />
-          </span>
-          <span>Dashboard</span>
-        </Link>
-        <Link to="/transactions" className="nav-item">
-          <span className="nav-icon">
-            <FiDollarSign />
-          </span>
-          <span>Transactions</span>
-        </Link>
-        <Link to="/wallet" className="nav-item">
-          <span className="nav-icon">
-            <FiCreditCard />
-          </span>
-          <span>Wallet</span>
-        </Link>
-        <Link to="/reports" className="nav-item">
-          <span className="nav-icon">
-            <FiPieChart />
-          </span>
-          <span>Reports</span>
-        </Link>
-      </nav>
+      <div className="sidebar-content">
+        {/* Main Navigation */}
+        <nav className="sidebar-nav">
+          <Link to="/" className="nav-item active">
+            <span className="nav-icon">
+              <FiHome />
+            </span>
+            <span className="nav-text">Dashboard</span>
+          </Link>
+          <Link to="/wallet" className="nav-item">
+            <span className="nav-icon">
+              <FiDollarSign />
+            </span>
 
-      {/* Sign Up Button at Bottom */}
-      <div className="sidebar-footer">
-        <Link to="/auth" className="signup-btn">
-          <span className="nav-icon">
-            <FiUserPlus />
-          </span>
-          <span>Sign Up</span>
-        </Link>
+            <span className="nav-text">Wallet</span>
+          </Link>
+          <Link to="/wallet" className="nav-item">
+            <span className="nav-icon">
+              <FiPieChart />
+            </span>
+            <span className="nav-text">Reports</span>
+          </Link>
+          <Link to="/calendar" className="nav-item">
+            <span className="nav-icon">
+              <FiCalendar />
+            </span>
+            <span className="nav-text">Calendar</span>
+          </Link>
+          <Link to="/profile" className="nav-item">
+            <span className="nav-icon">
+              <FiUser />
+            </span>
+            <span className="nav-text">Profile</span>
+          </Link>
+        </nav>
+
+        {/* Sign Up Button at Bottom */}
+        <div className="sidebar-footer">
+          <div className="user-profile">
+            <div className="profile-icon">JD</div>
+            <div className="profile-info">
+              <div className="profile-name">John Doe</div>
+              <div className="profile-email">john@example.com</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
