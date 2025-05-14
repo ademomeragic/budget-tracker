@@ -1,0 +1,101 @@
+.calendar-page {
+  padding: 2rem;
+  max-width: 900px;
+  margin: auto;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.react-calendar {
+  width: 100%;
+  max-width: 800px;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.react-calendar__tile {
+  height: 100px;
+  vertical-align: top;
+  padding: 0.5rem;
+  position: relative;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  color: #444;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.react-calendar__tile--now {
+  background: #e3f2fd !important;
+  border-radius: 8px;
+}
+
+.react-calendar__tile--active {
+  background: #1976d2 !important;
+  color: white;
+  border-radius: 8px;
+}
+
+.react-calendar__month-view__days__day--weekend {
+  color: #888 !important; /* softer gray instead of red */
+}
+
+.calendar-marker {
+  margin-top: 0.4rem;
+  display: flex;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.marker {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.marker.income {
+  background-color: #4caf50;
+}
+
+.marker.expense {
+  background-color: #f44336;
+}
+
+.transactions-list {
+  margin-top: 2rem;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  border-radius: 10px;
+}
+
+.transactions-list h2 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.txn-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.txn-item:last-child {
+  border-bottom: none;
+}
+
+.txn-item.income span:last-child {
+  color: #388e3c;
+}
+
+.txn-item.expense span:last-child {
+  color: #d32f2f;
+}
