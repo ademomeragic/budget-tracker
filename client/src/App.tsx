@@ -7,6 +7,7 @@ import Transactions from "./pages/transaction/transaction";
 import Wallet from "./pages/wallet/wallet";
 import Reports from "./pages/reports/reports";
 import AuthForm from "./pages/auth/authForm";
+import { ProfilePage } from './pages/profile/profile';
 
 function MainLayout() {
   return (
@@ -19,6 +20,7 @@ function MainLayout() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/reports" element={<Reports />} />
+           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </div>
