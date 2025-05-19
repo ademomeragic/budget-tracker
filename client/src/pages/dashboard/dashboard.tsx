@@ -1,319 +1,710 @@
-import React, { useState } from "react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import "./dashboard.css";
+import React, { useState, useEffect } from "react";
+import {
+  FiArrowLeft,
+  FiArrowRight,
+  FiPlus,
+  FiTarget,
+  FiPieChart,
+  FiDollarSign,
+  FiBell,
+  FiCalendar,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiCreditCard,
+  FiPocket,
+  FiSettings,
+} from "react-icons/fi";
+import {
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 
-interface DashboardProps {
-  wallets: {
-    id: number;
-    name: string;
-    balance: number;
-    type: string;
-  }[];
-  onTransaction: (transaction: {
-    walletId: number;
-    amount: number;
-    type: "income" | "expense";
-  }) => void;
-}
+// Types
+type TransactionType = "income" | "expense";
+type TimeRange = "week" | "month" | "year";
+
 interface Transaction {
   id: string;
   amount: number;
-  date: string; // YYYY-MM-DD format
+  date: string;
   description: string;
-  type: "income" | "expense";
+  type: TransactionType;
+  category: string;
 }
 
-interface MonthData {
-  transactions: Transaction[];
-  weeks: string[];
-  year: number;
-  month: number; // 1-12
+interface Goal {
+  id: string;
+  name: string;
+  target: number;
+  saved: number;
+  deadline: string;
+  color: string;
 }
 
-const monthlyData: Record<string, MonthData> = {
-  "MAR 25": {
-    transactions: [],
-    weeks: ["Mar 01-04", "Mar 04-11", "Mar 11-18", "Mar 18-25", "Mar 25-31"],
-    year: 2025,
-    month: 3,
-  },
-  "APR 25": {
-    transactions: [],
-    weeks: ["Apr 01-04", "Apr 04-11", "Apr 11-18", "Apr 18-25", "Apr 25-30"],
-    year: 2025,
-    month: 4,
-  },
-  "MAY 25": {
-    transactions: [],
-    weeks: ["May 01-04", "May 04-11", "May 11-18", "May 18-25", "May 25-31"],
-    year: 2025,
-    month: 5,
-  },
-  "JUN 25": {
-    transactions: [],
-    weeks: ["Jun 01-08", "Jun 08-15", "Jun 15-22", "Jun 22-29", "Jun 29-30"],
-    year: 2025,
-    month: 6,
-  },
-  "JUL 25": {
-    transactions: [],
-    weeks: ["Jul 01-06", "Jul 06-13", "Jul 13-20", "Jul 20-27", "Jul 27-31"],
-    year: 2025,
-    month: 7,
-  },
+interface Bill {
+  id: string;
+  name: string;
+  amount: number;
+  dueDate: string;
+  paid: boolean;
+}
+
+interface Category {
+  name: string;
+  amount: number;
+  color: string;
+}
+
+// Sample data generation functions
+const generateTransactions = (count: number): Transaction[] => {
+  const categories = [
+    "Food",
+    "Housing",
+    "Transport",
+    "Entertainment",
+    "Utilities",
+    "Healthcare",
+  ];
+  const types: TransactionType[] = ["income", "expense"];
+  const transactions: Transaction[] = [];
+
+  const currentDate = new Date();
+
+  for (let i = 0; i < count; i++) {
+    const daysAgo = Math.floor(Math.random() * 30);
+    const date = new Date(currentDate);
+    date.setDate(date.getDate() - daysAgo);
+
+    const isIncome = Math.random() > 0.7;
+    const type = isIncome ? "income" : "expense";
+    const amount = isIncome
+      ? Math.floor(Math.random() * 2000) + 500
+      : Math.floor(Math.random() * 300) + 10;
+
+    transactions.push({
+      id: `txn-${i}`,
+      amount,
+      date: date.toISOString().split("T")[0],
+      description: isIncome
+        ? "Salary"
+        : `${
+            categories[Math.floor(Math.random() * categories.length)]
+          } Expense`,
+      type,
+      category: isIncome
+        ? "Income"
+        : categories[Math.floor(Math.random() * categories.length)],
+    });
+  }
+
+  return transactions;
 };
 
-const monthNames = ["MAR 25", "APR 25", "MAY 25", "JUN 25", "JUL 25"];
+const generateGoals = (): Goal[] => {
+  return [
+    {
+      id: "goal-1",
+      name: "Test 1",
+      target: 0,
+      saved: 0,
+      deadline: "null",
+      color: "#4ade80",
+    },
+    {
+      id: "goal-2",
+      name: "Test 2",
+      target: 0,
+      saved: 0,
+      deadline: "null",
+      color: "#60a5fa",
+    },
+    {
+      id: "goal-3",
+      name: "Test 3",
+      target: 0,
+      saved: 0,
+      deadline: "null",
+      color: "#a78bfa",
+    },
+  ];
+};
 
-export default function Dashboard() {
-  const [activeMonthIndex, setActiveMonthIndex] = useState(2); // Start with MAY 25
-  const [newTransaction, setNewTransaction] = useState({
-    amount: "",
-    date: "",
-    description: "",
-    type: "income" as "income" | "expense",
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884D8",
+  "#82CA9D",
+];
+
+const DashboardContent = () => {
+  // State
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [timeRange, setTimeRange] = useState<TimeRange>("month");
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [showTransactionForm, setShowTransactionForm] = useState(false);
+  const [newTransaction, setNewTransaction] = useState<Omit<Transaction, "id">>(
+    {
+      amount: 0,
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+      type: "expense",
+      category: "Food",
+    }
+  );
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+
+  // Initialize data
+  useEffect(() => {
+    setTransactions(generateTransactions(50));
+    setGoals(generateGoals());
+  }, []);
+
+  // Filter transactions by time range
+  const filteredTransactions = transactions.filter((txn) => {
+    const txnDate = new Date(txn.date);
+    const now = new Date();
+
+    if (timeRange === "week") {
+      const oneWeekAgo = new Date(now);
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      return txnDate >= oneWeekAgo;
+    } else if (timeRange === "month") {
+      return (
+        txnDate.getMonth() === currentMonth &&
+        txnDate.getFullYear() === currentYear
+      );
+    } else {
+      // year
+      return txnDate.getFullYear() === currentYear;
+    }
   });
-  const [showForm, setShowForm] = useState(false);
-  const [dateError, setDateError] = useState("");
-
-  const activeMonth = monthNames[activeMonthIndex];
-  const currentMonthData = monthlyData[activeMonth];
-  const monthName = activeMonth.split(" ")[0];
-  const year = activeMonth.split(" ")[1];
-
-  const formatCurrency = (amount: number): string => {
-    return amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,") + " KM";
-  };
 
   // Calculate totals
-  const incomeTotal = currentMonthData.transactions
+  const incomeTotal = filteredTransactions
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const expensesTotal = currentMonthData.transactions
+  const expensesTotal = filteredTransactions
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const balanceTotal = incomeTotal - expensesTotal;
+  const balance = incomeTotal - expensesTotal;
 
-  const validateDate = (dateString: string): boolean => {
-    const selectedDate = new Date(dateString);
-    const selectedMonth = selectedDate.getMonth() + 1; // JS months are 0-11
-    const selectedYear = selectedDate.getFullYear();
+  // Spending by category
+  const spendingByCategory = filteredTransactions
+    .filter((t) => t.type === "expense")
+    .reduce((acc: Record<string, number>, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
+      return acc;
+    }, {});
 
-    return (
-      selectedMonth === currentMonthData.month &&
-      selectedYear === currentMonthData.year
-    );
-  };
+  const categoryData = Object.entries(spendingByCategory)
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount);
 
-  const handleAddTransaction = () => {
-    if (!newTransaction.amount || !newTransaction.date) return;
+  // Recent transactions
+  const recentTransactions = [...transactions]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
 
-    if (!validateDate(newTransaction.date)) {
-      setDateError(`Date must be in ${monthName} ${year}`);
-      return;
-    }
-
-    setDateError("");
-
-    const transaction: Transaction = {
-      id: Date.now().toString(),
-      amount: parseFloat(newTransaction.amount),
-      date: newTransaction.date,
-      description: newTransaction.description,
-      type: newTransaction.type,
-    };
-
-    monthlyData[activeMonth].transactions.push(transaction);
-    setNewTransaction({
-      amount: "",
-      date: "",
-      description: "",
-      type: "income",
+  // Monthly trend data
+  const monthlyTrendData = Array.from({ length: 12 }, (_, i) => {
+    const monthTransactions = transactions.filter((t) => {
+      const txnDate = new Date(t.date);
+      return txnDate.getMonth() === i && txnDate.getFullYear() === currentYear;
     });
-    setShowForm(false);
-  };
 
-  const getTransactionsForWeek = (week: string) => {
-    const [start, end] = week
-      .split("-")
-      .map((s) => parseInt(s.replace(/\D/g, "")));
-    return currentMonthData.transactions.filter((txn) => {
-      const day = parseInt(txn.date.split("-")[2]);
-      return day >= start && day <= end;
+    const income = monthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const expenses = monthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      name: new Date(currentYear, i, 1).toLocaleString("default", {
+        month: "short",
+      }),
+      income,
+      expenses,
+      balance: income - expenses,
+    };
+  });
+
+  // Handlers
+  const handleAddTransaction = () => {
+    const newTxn: Transaction = {
+      ...newTransaction,
+      id: `txn-${Date.now()}`,
+    };
+    setTransactions([newTxn, ...transactions]);
+    setShowTransactionForm(false);
+    setNewTransaction({
+      amount: 0,
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+      type: "expense",
+      category: "Food",
     });
   };
 
   const handleMonthChange = (direction: "prev" | "next") => {
-    setActiveMonthIndex((prev) => {
-      if (direction === "prev" && prev > 0) return prev - 1;
-      if (direction === "next" && prev < monthNames.length - 1) return prev + 1;
-      return prev;
-    });
-    setNewTransaction({
-      amount: "",
-      date: "",
-      description: "",
-      type: "income",
-    });
-    setShowForm(false);
-    setDateError("");
+    if (direction === "prev") {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(currentYear - 1);
+      } else {
+        setCurrentMonth(currentMonth - 1);
+      }
+    } else {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(currentYear + 1);
+      } else {
+        setCurrentMonth(currentMonth + 1);
+      }
+    }
   };
 
-  // Get min/max dates for the date input
-  const getMinMaxDates = () => {
-    const year = currentMonthData.year;
-    const month = currentMonthData.month;
-    const daysInMonth = new Date(year, month, 0).getDate();
-
-    return {
-      min: `${year}-${month.toString().padStart(2, "0")}-01`,
-      max: `${year}-${month.toString().padStart(2, "0")}-${daysInMonth
-        .toString()
-        .padStart(2, "0")}`,
-    };
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
   };
 
-  const { min, max } = getMinMaxDates();
+  const getProgressColor = (percentage: number): string => {
+    if (percentage >= 80) return "#4ade80";
+    if (percentage >= 50) return "#60a5fa";
+    if (percentage >= 30) return "#fbbf24";
+    return "#f87171";
+  };
 
   return (
-    <div className="dashboard-container">
-      {/* Month Navigation */}
-      <div className="month-navigation">
-        <button
-          className="nav-arrow"
-          onClick={() => handleMonthChange("prev")}
-          disabled={activeMonthIndex === 0}
-        >
-          <FiChevronLeft size={24} />
-        </button>
-        <h2>
-          {monthName} {year}
-        </h2>
-        <button
-          className="nav-arrow"
-          onClick={() => handleMonthChange("next")}
-          disabled={activeMonthIndex === monthNames.length - 1}
-        >
-          <FiChevronRight size={24} />
-        </button>
-      </div>
-
-      {/* Balance Display */}
-      <div className="balance-display">
-        <h3>{monthName} Balance</h3>
-        <p
-          className={`balance-amount ${
-            balanceTotal >= 0 ? "positive" : "negative"
-          }`}
-        >
-          {formatCurrency(balanceTotal)}
-        </p>
-      </div>
-
-      {/* Income/Expenses Summary */}
-      <div className="summary-section">
-        <div className="summary-card">
-          <h3>Income</h3>
-          <p className="amount income">{formatCurrency(incomeTotal)}</p>
-        </div>
-        <div className="summary-card">
-          <h3>Expenses</h3>
-          <p className="amount expense">{formatCurrency(expensesTotal)}</p>
-        </div>
-      </div>
-
-      {/* Transaction Form */}
-      <button
-        className="add-transaction-btn"
-        onClick={() => setShowForm(!showForm)}
-      >
-        {showForm ? "Cancel" : "+ Add Transaction"}
-      </button>
-
-      {showForm && (
-        <div className="transaction-form">
-          <select
-            value={newTransaction.type}
-            onChange={(e) =>
-              setNewTransaction({
-                ...newTransaction,
-                type: e.target.value as "income" | "expense",
-              })
-            }
+    <div className="main-content">
+      {/* Header */}
+      <header className="header">
+        <h1>Dashboard</h1>
+        <div className="header-actions">
+          <button
+            className="primary-button"
+            onClick={() => setShowTransactionForm(true)}
           >
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
-          <input
-            type="number"
-            value={newTransaction.amount}
-            onChange={(e) =>
-              setNewTransaction({
-                ...newTransaction,
-                amount: e.target.value,
-              })
-            }
-            placeholder="Amount"
-            step="0.01"
-          />
-          <input
-            type="date"
-            value={newTransaction.date}
-            onChange={(e) =>
-              setNewTransaction({
-                ...newTransaction,
-                date: e.target.value,
-              })
-            }
-            placeholder="Date"
-            min={min}
-            max={max}
-          />
-          {dateError && <div className="date-error">{dateError}</div>}
-          <input
-            type="text"
-            value={newTransaction.description}
-            onChange={(e) =>
-              setNewTransaction({
-                ...newTransaction,
-                description: e.target.value,
-              })
-            }
-            placeholder="Description"
-          />
-          <button onClick={handleAddTransaction}>Add</button>
+            <FiPlus /> Add Transaction
+          </button>
+          <div className="time-range-selector">
+            <button
+              className={`time-range-btn ${
+                timeRange === "week" ? "active" : ""
+              }`}
+              onClick={() => setTimeRange("week")}
+            >
+              Week
+            </button>
+            <button
+              className={`time-range-btn ${
+                timeRange === "month" ? "active" : ""
+              }`}
+              onClick={() => setTimeRange("month")}
+            >
+              Month
+            </button>
+            <button
+              className={`time-range-btn ${
+                timeRange === "year" ? "active" : ""
+              }`}
+              onClick={() => setTimeRange("year")}
+            >
+              Year
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Dashboard Content */}
+      <div className="dashboard-content">
+        {/* Summary Cards */}
+        <div className="summary-cards">
+          <div className="summary-card balance">
+            <div className="card-header">
+              <FiDollarSign className="card-icon" />
+              <h3>Current Balance</h3>
+            </div>
+            <div className="card-value">{formatCurrency(balance)}</div>
+            <div
+              className={`card-trend ${balance >= 0 ? "positive" : "negative"}`}
+            >
+              {balance >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
+              <span>{balance >= 0 ? "Positive" : "Negative"} cash flow</span>
+            </div>
+          </div>
+
+          <div className="summary-card income">
+            <div className="card-header">
+              <FiTrendingUp className="card-icon" />
+              <h3>Income</h3>
+            </div>
+            <div className="card-value">{formatCurrency(incomeTotal)}</div>
+            <div className="card-trend positive">
+              <FiTrendingUp />
+              <span>+12% from last {timeRange}</span>
+            </div>
+          </div>
+
+          <div className="summary-card expenses">
+            <div className="card-header">
+              <FiTrendingDown className="card-icon" />
+              <h3>Expenses</h3>
+            </div>
+            <div className="card-value">{formatCurrency(expensesTotal)}</div>
+            <div className="card-trend negative">
+              <FiTrendingDown />
+              <span>-5% from last {timeRange}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Row */}
+        <div className="charts-row">
+          <div className="chart-container">
+            <div className="chart-header">
+              <h3>Monthly Trend</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={monthlyTrendData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="balance"
+                  stroke="#8884d8"
+                  fill="#8884d8"
+                  fillOpacity={0.2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="chart-container">
+            <div className="chart-header">
+              <h3>Spending by Category</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="amount"
+                  nameKey="name"
+                  label={({ name, percent }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Goals and Transactions Row */}
+        <div className="bottom-row">
+          <div className="goals-container">
+            <div className="section-header">
+              <FiTarget className="section-icon" />
+              <h3>Financial Goals</h3>
+              <button className="add-button">
+                <FiPlus />
+              </button>
+            </div>
+            <div className="goals-list">
+              {goals.map((goal) => (
+                <div
+                  key={goal.id}
+                  className="goal-item"
+                  onClick={() => setSelectedGoal(goal)}
+                >
+                  <div className="goal-info">
+                    <h4>{goal.name}</h4>
+                    <span className="goal-deadline">
+                      Target: {formatCurrency(goal.target)} by{" "}
+                      {new Date(goal.deadline).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="goal-progress">
+                    <div className="progress-bar">
+                      <div
+                        className="progress-fill"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            (goal.saved / goal.target) * 100
+                          )}%`,
+                          backgroundColor: goal.color,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="transactions-container">
+            <div className="section-header">
+              <FiCreditCard className="section-icon" />
+              <h3>Recent Transactions</h3>
+              <button className="view-all">View All</button>
+            </div>
+            <div className="transactions-list">
+              {recentTransactions.map((txn) => (
+                <div key={txn.id} className={`transaction-item ${txn.type}`}>
+                  <div className="transaction-icon">
+                    {txn.type === "income" ? (
+                      <FiTrendingUp />
+                    ) : (
+                      <FiTrendingDown />
+                    )}
+                  </div>
+                  <div className="transaction-details">
+                    <h4>{txn.description}</h4>
+                    <span className="transaction-category">{txn.category}</span>
+                    <span className="transaction-date">
+                      {new Date(txn.date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className={`transaction-amount ${txn.type}`}>
+                    {txn.type === "income" ? "+" : "-"}
+                    {formatCurrency(txn.amount)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Transaction Form Modal */}
+      {showTransactionForm && (
+        <div className="modal-overlay">
+          <div className="transaction-modal">
+            <div className="modal-header">
+              <h2>Add New Transaction</h2>
+              <button
+                className="close-button"
+                onClick={() => setShowTransactionForm(false)}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Transaction Type</label>
+                <div className="type-toggle">
+                  <button
+                    className={`toggle-btn ${
+                      newTransaction.type === "income" ? "active" : ""
+                    }`}
+                    onClick={() =>
+                      setNewTransaction({ ...newTransaction, type: "income" })
+                    }
+                  >
+                    Income
+                  </button>
+                  <button
+                    className={`toggle-btn ${
+                      newTransaction.type === "expense" ? "active" : ""
+                    }`}
+                    onClick={() =>
+                      setNewTransaction({ ...newTransaction, type: "expense" })
+                    }
+                  >
+                    Expense
+                  </button>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Amount</label>
+                <input
+                  type="number"
+                  value={newTransaction.amount}
+                  onChange={(e) =>
+                    setNewTransaction({
+                      ...newTransaction,
+                      amount: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="form-group">
+                <label>Date</label>
+                <input
+                  type="date"
+                  value={newTransaction.date}
+                  onChange={(e) =>
+                    setNewTransaction({
+                      ...newTransaction,
+                      date: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <input
+                  type="text"
+                  value={newTransaction.description}
+                  onChange={(e) =>
+                    setNewTransaction({
+                      ...newTransaction,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="What was this for?"
+                />
+              </div>
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  value={newTransaction.category}
+                  onChange={(e) =>
+                    setNewTransaction({
+                      ...newTransaction,
+                      category: e.target.value,
+                    })
+                  }
+                >
+                  <option value="Food">Food</option>
+                  <option value="Housing">Housing</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Income">Income</option>
+                </select>
+              </div>
+              <div className="form-actions">
+                <button
+                  className="cancel-button"
+                  onClick={() => setShowTransactionForm(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="submit-button"
+                  onClick={handleAddTransaction}
+                >
+                  Add Transaction
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Calendar Weeks */}
-      <div className="calendar-section">
-        {currentMonthData.weeks.map((week) => {
-          const weekTransactions = getTransactionsForWeek(week);
-          return (
-            <div key={week} className="week-period">
-              <h3>{week}</h3>
-              {weekTransactions.length > 0 ? (
-                weekTransactions.map((txn) => (
-                  <div key={txn.id} className={`transaction ${txn.type}`}>
-                    <span className="transaction-day">
-                      {txn.date.split("-")[2]}
-                    </span>
-                    <span className="transaction-desc">{txn.description}</span>
-                    <span className="transaction-amount">
-                      {txn.type === "income" ? "+" : "-"}
-                      {formatCurrency(txn.amount)}
+      {/* Goal Detail Modal */}
+      {selectedGoal && (
+        <div className="modal-overlay">
+          <div className="goal-modal">
+            <div className="modal-header">
+              <h2>{selectedGoal.name}</h2>
+              <button
+                className="close-button"
+                onClick={() => setSelectedGoal(null)}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="goal-progress-large">
+                <div className="progress-circle">
+                  <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="54"
+                      fill="none"
+                      stroke="#e0e0e0"
+                      strokeWidth="8"
+                    />
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="54"
+                      fill="none"
+                      stroke={selectedGoal.color}
+                      strokeWidth="8"
+                      strokeDasharray={`${
+                        (selectedGoal.saved / selectedGoal.target) * 340
+                      } 340`}
+                      transform="rotate(-90 60 60)"
+                    />
+                  </svg>
+                </div>
+                <div className="goal-stats">
+                  <div className="stat-item">
+                    <span className="stat-label">Saved</span>
+                    <span className="stat-value">
+                      {formatCurrency(selectedGoal.saved)}
                     </span>
                   </div>
-                ))
-              ) : (
-                <div className="no-transactions">No transactions</div>
-              )}
+                  <div className="stat-item">
+                    <span className="stat-label">Target</span>
+                    <span className="stat-value">
+                      {formatCurrency(selectedGoal.target)}
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Remaining</span>
+                    <span className="stat-value">
+                      {formatCurrency(selectedGoal.target - selectedGoal.saved)}
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Deadline</span>
+                    <span className="stat-value">
+                      {new Date(selectedGoal.deadline).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="goal-actions">
+                <button className="action-button add-funds">Add Funds</button>
+                <button className="action-button edit-goal">Edit Goal</button>
+              </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default DashboardContent;
