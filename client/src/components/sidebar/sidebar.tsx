@@ -6,6 +6,7 @@ import {
   FiPieChart,
   FiUser,
   FiCalendar,
+  FiTarget
 } from "react-icons/fi";
 import "./sidebar.css";
 import React from "react";
@@ -35,12 +36,21 @@ export default function Sidebar() {
             </span>
             <span className="nav-text">Reports</span>
           </Link>
+
           <Link to="/calendar" className="nav-item">
             <span className="nav-icon">
               <FiCalendar />
             </span>
             <span className="nav-text">Calendar</span>
           </Link>
+
+          <Link to="/goals" className="nav-item">
+            <span className="nav-icon">
+              <FiTarget />
+            </span>
+            <span className="nav-text">Goals</span>
+          </Link>
+
           <Link to="/profile" className="nav-item">
             <span className="nav-icon">
               <FiUser />
