@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import './goals.css';
 
 interface Expense {
@@ -16,10 +17,12 @@ const ExpenseTracker = () => {
   const [activeTab, setActiveTab] = useState<'manual' | 'scan'>('manual');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  // Sample categories data
+  // categories sample
   const categories = [
     'Food', 'Dining', 'Transportation', 'Housing', 'Entertainment', 'Shopping', 'Other'
   ];
+
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c', '#d0ed57', '#8dd1e1'];
 
   // Add new expense
   const handleAddExpense = (e: React.FormEvent) => {
@@ -91,13 +94,23 @@ const ExpenseTracker = () => {
     return (expenses.reduce((sum, e) => sum + e.amount, 0) / 30).toFixed(2);
   };
 
+  const getChartData = () => {
+    const categoryTotals: { [key: string]: number } = {};
+
+    expenses.forEach(expense => {
+      categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
+    });
+
+     return Object.entries(categoryTotals).map(([name, value]) => ({ name, value }));
+  };
+
   return (
     <div className="container">
       <header className="header">
         <h1>Expense Tracker</h1>
         <div className="total-card">
           <span className="card-title">Total Expenses</span>
-          <span className="card-value">${totalExpenses.toFixed(2)}</span>
+          <span className="card-value"> ${totalExpenses.toFixed(2)}</span>
         </div>
       </header>
 
@@ -213,9 +226,28 @@ const ExpenseTracker = () => {
 
       <div className="chart-container">
         <h2>Spending Breakdown</h2>
-        <div style={{ height: '300px', background: '#f1f3f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p>Expense chart would appear here</p>
-        </div>
+        {expenses.length === 0 ? (
+          <p>No data to display</p>
+        ) : (
+          <PieChart width={400} height={300}>
+            <Pie
+              data={getChartData()}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              fill="#8884d8"
+              label
+            >
+              {getChartData().map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        )}
       </div>
     </div>
   );
