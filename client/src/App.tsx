@@ -8,6 +8,7 @@ import Wallet from "./pages/wallet/wallet";
 import Reports from "./pages/reports/reports";
 import AuthForm from "./pages/auth/authForm";
 import { ProfilePage } from './pages/profile/profile';
+import Goals from "./pages/goals/goals";
 
 function MainLayout() {
   return (
@@ -21,6 +22,7 @@ function MainLayout() {
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/reports" element={<Reports />} />
            <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/goals" element={<Goals />} />
         </Routes>
       </div>
     </div>

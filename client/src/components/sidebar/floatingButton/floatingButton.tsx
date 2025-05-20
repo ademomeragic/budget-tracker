@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { FiPlus, FiDollarSign, FiTrendingUp } from "react-icons/fi";
+import {
+  FiTrendingUp,
+  FiDollarSign,
+  FiPlus,
+} from "react-icons/fi";
+
 import "./floatingButton.css";
 
 export default function FloatingActionButton() {

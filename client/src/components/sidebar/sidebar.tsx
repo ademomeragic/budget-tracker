@@ -6,8 +6,9 @@ import {
   FiPieChart,
   FiUser,
   FiCalendar,
-  FiTarget
+  FiTarget,
 } from "react-icons/fi";
+
 import "./sidebar.css";
 import React from "react";
 
