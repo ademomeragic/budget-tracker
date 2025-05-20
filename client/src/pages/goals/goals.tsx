@@ -1,236 +1,192 @@
-import React, { useState, useEffect } from 'react';
-import './goals.css';
+import { useState, useEffect } from 'react';
+import './goals.css'; 
 
-interface Goal {
+interface Expense {
   id: string;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  targetDate: Date;
+  amount: number;
+  description: string;
+  date: string;
   category: string;
 }
 
-const GoalsSection: React.FC = () => {
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [newGoal, setNewGoal] = useState<Omit<Goal, 'id'>>({
-    name: '',
-    targetAmount: 0,
-    currentAmount: 0,
-    targetDate: new Date(),
-    category: 'General',
-  });
-  const [isAdding, setIsAdding] = useState(false);
+const ExpenseTracker = () => {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [amount, setAmount] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'manual' | 'scan'>('manual');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  // Load goals from localStorage
-  useEffect(() => {
-    const savedGoals = localStorage.getItem('budgetGoals');
-    if (savedGoals) {
-      try {
-        const parsedGoals = JSON.parse(savedGoals);
-        const goalsWithDates = parsedGoals.map((goal: any) => ({
-          ...goal,
-          targetDate: new Date(goal.targetDate)
-        }));
-        setGoals(goalsWithDates);
-      } catch (error) {
-        console.error('Failed to parse saved goals', error);
-      }
-    }
-  }, []);
+  // Sample categories data
+  const categories = [
+    'Food', 'Dining', 'Transportation', 'Housing', 'Entertainment', 'Shopping', 'Other'
+  ];
 
-  // Save goals to localStorage
-  useEffect(() => {
-    localStorage.setItem('budgetGoals', JSON.stringify(goals));
-  }, [goals]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewGoal(prev => ({
-      ...prev,
-      [name]: name === 'targetAmount' || name === 'currentAmount' 
-        ? parseFloat(value) || 0 
-        : value
-    }));
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewGoal(prev => ({
-      ...prev,
-      targetDate: new Date(e.target.value)
-    }));
-  };
-
-  const addGoal = () => {
-    if (!newGoal.name || newGoal.targetAmount <= 0) return;
-    
-    const goal: Goal = {
-      ...newGoal,
+  // Add new expense
+  const handleAddExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newExpense: Expense = {
       id: Date.now().toString(),
+      amount: parseFloat(amount),
+      description,
+      date: new Date().toISOString(),
+      category: selectedCategory || determineCategory(description)
     };
-    
-    setGoals(prev => [...prev, goal]);
-    setNewGoal({
-      name: '',
-      targetAmount: 0,
-      currentAmount: 0,
-      targetDate: new Date(),
-      category: 'General',
-    });
-    setIsAdding(false);
+    setExpenses([...expenses, newExpense]);
+    setAmount('');
+    setDescription('');
+    setSelectedCategory('');
   };
 
-  const updateCurrentAmount = (id: string, amount: number) => {
-    setGoals(prev =>
-      prev.map(goal =>
-        goal.id === id
-          ? { ...goal, currentAmount: Math.min(amount, goal.targetAmount) }
-          : goal
-      )
-    );
+  // Determine category based on description
+  const determineCategory = (desc: string): string => {
+    const lowerDesc = desc.toLowerCase();
+    if (lowerDesc.includes('coffee') || lowerDesc.includes('grocery')) return 'Food';
+    if (lowerDesc.includes('restaurant')) return 'Dining';
+    if (lowerDesc.includes('fuel') || lowerDesc.includes('gas')) return 'Transportation';
+    if (lowerDesc.includes('rent')) return 'Housing';
+    if (lowerDesc.includes('movie') || lowerDesc.includes('netflix')) return 'Entertainment';
+    return 'Other';
   };
 
-  const deleteGoal = (id: string) => {
-    setGoals(prev => prev.filter(goal => goal.id !== id));
-  };
-
-  const calculatePercentage = (goal: Goal) => {
-    return Math.round((goal.currentAmount / goal.targetAmount) * 100);
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+  // Calculate total expenses
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
-    <div className="goals-section">
-      <div className="goals-header">
-        <h2>Financial Goals</h2>
+    <div className="container">
+      <header className="header">
+        <h1>Expense Tracker</h1>
+        <div className="total-card">
+          <span className="card-title">Total Expenses</span>
+          <span className="card-value">${totalExpenses.toFixed(2)}</span>
+        </div>
+      </header>
+
+      <div className="tabs">
         <button 
-          className="add-goal-btn"
-          onClick={() => setIsAdding(true)}
+          className={`tab-button ${activeTab === 'manual' ? 'active' : ''}`}
+          onClick={() => setActiveTab('manual')}
         >
-          + Add Goal
+          Manual Entry
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'scan' ? 'active' : ''}`}
+          onClick={() => setActiveTab('scan')}
+        >
+          Scan Receipt
         </button>
       </div>
 
-      {isAdding && (
-        <div className="add-goal-form">
-          <h3>Add New Goal</h3>
+      {activeTab === 'manual' ? (
+        <form onSubmit={handleAddExpense} className="expense-form">
           <div className="form-group">
-            <label>Goal Name</label>
+            <label htmlFor="amount">Amount ($)</label>
+            <input
+              type="number"
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
             <input
               type="text"
-              name="name"
-              value={newGoal.name}
-              onChange={handleInputChange}
-              placeholder="e.g. Vacation, New Car"
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
             />
           </div>
+
           <div className="form-group">
-            <label>Target Amount ($)</label>
-            <input
-              type="number"
-              name="targetAmount"
-              value={newGoal.targetAmount || ''}
-              onChange={handleInputChange}
-              min="0.01"
-              step="0.01"
-            />
-          </div>
-          <div className="form-group">
-            <label>Current Amount ($)</label>
-            <input
-              type="number"
-              name="currentAmount"
-              value={newGoal.currentAmount || ''}
-              onChange={handleInputChange}
-              min="0"
-              step="0.01"
-            />
-          </div>
-          <div className="form-group">
-            <label>Target Date</label>
-            <input
-              type="date"
-              value={newGoal.targetDate.toISOString().split('T')[0]}
-              onChange={handleDateChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Category</label>
+            <label htmlFor="category">Category (optional)</label>
             <select
-              name="category"
-              value={newGoal.category}
-              onChange={handleInputChange}
+              id="category"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              <option value="General">General</option>
-              <option value="Travel">Travel</option>
-              <option value="Vehicle">Vehicle</option>
-              <option value="Home">Home</option>
-              <option value="Education">Education</option>
-              <option value="Emergency">Emergency Fund</option>
+              <option value="">Auto-detect</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
             </select>
           </div>
-          <div className="form-actions">
-            <button className="cancel-btn" onClick={() => setIsAdding(false)}>
-              Cancel
-            </button>
-            <button className="save-btn" onClick={addGoal}>
-              Save Goal
-            </button>
+
+          <button type="submit" className="primary">
+            Add Expense
+          </button>
+        </form>
+      ) : (
+        <div className="scanner-container">
+          <div className="scanner-placeholder">
+            <p>Click to scan receipt</p>
           </div>
+          <button 
+            className="secondary"
+            onClick={() => console.log('Launch camera/scanner')}
+          >
+            Open Scanner
+          </button>
         </div>
       )}
 
-      <div className="goals-list">
-        {goals.length === 0 ? (
-          <p className="no-goals">No goals added yet. Add your first financial goal!</p>
+      <div className="dashboard-cards">
+        <div className="card">
+          <span className="card-title">This Month</span>
+          <span className="card-value">${
+            expenses
+              .filter(e => new Date(e.date).getMonth() === new Date().getMonth())
+              .reduce((sum, e) => sum + e.amount, 0)
+              .toFixed(2)
+          }</span>
+        </div>
+        <div className="card">
+          <span className="card-title">Most Spent Category</span>
+          <span className="card-value">Food</span>
+        </div>
+        <div className="card">
+          <span className="card-title">Daily Average</span>
+          <span className="card-value">${
+            (expenses.reduce((sum, e) => sum + e.amount, 0) / 30).toFixed(2)
+          }</span>
+        </div>
+      </div>
+
+      <div className="expense-list">
+        <h2>Recent Expenses</h2>
+        {expenses.length === 0 ? (
+          <p>No expenses recorded yet</p>
         ) : (
-          goals.map(goal => (
-            <div key={goal.id} className="goal-card">
-              <div className="goal-header">
-                <h3>{goal.name}</h3>
-                <span className="goal-category">{goal.category}</span>
-                <button 
-                  className="delete-goal"
-                  onClick={() => deleteGoal(goal.id)}
-                >
-                  ×
-                </button>
+          expenses.slice().reverse().map(expense => (
+            <div key={expense.id} className="expense-item">
+              <div className="expense-info">
+                <h3>{expense.description}</h3>
+                <span>{new Date(expense.date).toLocaleDateString()}</span>
               </div>
-              <div className="goal-details">
-                <div className="amounts">
-                  <span className="current">${goal.currentAmount.toFixed(2)}</span>
-                  <span className="separator">/</span>
-                  <span className="target">${goal.targetAmount.toFixed(2)}</span>
-                  <span className="percentage">({calculatePercentage(goal)}%)</span>
-                </div>
-                <div className="target-date">
-                  Target: {formatDate(goal.targetDate)}
-                </div>
-                <div className="update-amount">
-                  <input
-                    type="number"
-                    placeholder="Add amount"
-                    min="0"
-                    step="0.01"
-                    onChange={(e) => 
-                      updateCurrentAmount(goal.id, parseFloat(e.target.value) || 0)
-                    }
-                  />
-                  <button>Add</button>
-                </div>
+              <div>
+                <span className="expense-amount">${expense.amount.toFixed(2)}</span>
+                <span className={`expense-category category-${expense.category}`}>
+                  {expense.category}
+                </span>
               </div>
             </div>
           ))
         )}
       </div>
+
+      <div className="chart-container">
+        <h2>Spending Breakdown</h2>
+        {/* Chart would be implemented with a library like Chart.js */}
+        <div style={{ height: '300px', background: '#f1f3f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Expense chart would appear here</p>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default GoalsSection;
+export default ExpenseTracker;
