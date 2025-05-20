@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import './goals.css'; 
+import { useState } from 'react';
+import './goals.css';
 
 interface Expense {
   id: string;
@@ -50,6 +50,46 @@ const ExpenseTracker = () => {
 
   // Calculate total expenses
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // Calculate most spent category
+  const getMostSpentCategory = () => {
+    if (expenses.length === 0) return 'N/A';
+    
+    const categoryTotals: {[key: string]: number} = {};
+    
+    expenses.forEach(expense => {
+      if (!categoryTotals[expense.category]) {
+        categoryTotals[expense.category] = 0;
+      }
+      categoryTotals[expense.category] += expense.amount;
+    });
+    
+    let maxCategory = '';
+    let maxAmount = 0;
+    
+    Object.entries(categoryTotals).forEach(([category, amount]) => {
+      if (amount > maxAmount) {
+        maxAmount = amount;
+        maxCategory = category;
+      }
+    });
+    
+    return maxCategory || 'N/A';
+  };
+
+  // Calculate monthly expenses
+  const getMonthlyExpenses = () => {
+    const currentMonth = new Date().getMonth();
+    return expenses
+      .filter(e => new Date(e.date).getMonth() === currentMonth)
+      .reduce((sum, e) => sum + e.amount, 0)
+      .toFixed(2);
+  };
+
+  // Calculate daily average
+  const getDailyAverage = () => {
+    return (expenses.reduce((sum, e) => sum + e.amount, 0) / 30).toFixed(2);
+  };
 
   return (
     <div className="container">
@@ -137,22 +177,15 @@ const ExpenseTracker = () => {
       <div className="dashboard-cards">
         <div className="card">
           <span className="card-title">This Month</span>
-          <span className="card-value">${
-            expenses
-              .filter(e => new Date(e.date).getMonth() === new Date().getMonth())
-              .reduce((sum, e) => sum + e.amount, 0)
-              .toFixed(2)
-          }</span>
+          <span className="card-value"> ${getMonthlyExpenses()}</span>
         </div>
         <div className="card">
           <span className="card-title">Most Spent Category</span>
-          <span className="card-value">Food</span>
+          <span className="card-value"> {getMostSpentCategory()}</span>
         </div>
         <div className="card">
           <span className="card-title">Daily Average</span>
-          <span className="card-value">${
-            (expenses.reduce((sum, e) => sum + e.amount, 0) / 30).toFixed(2)
-          }</span>
+          <span className="card-value"> ${getDailyAverage()}</span>
         </div>
       </div>
 
@@ -180,7 +213,6 @@ const ExpenseTracker = () => {
 
       <div className="chart-container">
         <h2>Spending Breakdown</h2>
-        {/* Chart would be implemented with a library like Chart.js */}
         <div style={{ height: '300px', background: '#f1f3f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <p>Expense chart would appear here</p>
         </div>
