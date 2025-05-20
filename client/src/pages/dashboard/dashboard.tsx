@@ -1,19 +1,16 @@
-import "./dashboard.css";
 import React, { useState, useEffect } from "react";
 import {
-  FiArrowLeft,
-  FiArrowRight,
   FiPlus,
-  FiTarget,
-  FiPieChart,
   FiDollarSign,
-  FiBell,
-  FiCalendar,
   FiTrendingUp,
   FiTrendingDown,
+  FiTarget,
   FiCreditCard,
-  FiPocket,
-  FiSettings,
+  FiX,
+  FiType,
+  FiCalendar,
+  FiTag,
+  FiInfo,
 } from "react-icons/fi";
 import {
   AreaChart,
@@ -22,12 +19,11 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
 } from "recharts";
+import "./dashboard.css";
 
 // Types
 type TransactionType = "income" | "expense";
@@ -51,94 +47,6 @@ interface Goal {
   color: string;
 }
 
-interface Bill {
-  id: string;
-  name: string;
-  amount: number;
-  dueDate: string;
-  paid: boolean;
-}
-
-interface Category {
-  name: string;
-  amount: number;
-  color: string;
-}
-
-// Sample data generation functions
-const generateTransactions = (count: number): Transaction[] => {
-  const categories = [
-    "Food",
-    "Housing",
-    "Transport",
-    "Entertainment",
-    "Utilities",
-    "Healthcare",
-  ];
-  const types: TransactionType[] = ["income", "expense"];
-  const transactions: Transaction[] = [];
-
-  const currentDate = new Date();
-
-  for (let i = 0; i < count; i++) {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date(currentDate);
-    date.setDate(date.getDate() - daysAgo);
-
-    const isIncome = Math.random() > 0.7;
-    const type = isIncome ? "income" : "expense";
-    const amount = isIncome
-      ? Math.floor(Math.random() * 2000) + 500
-      : Math.floor(Math.random() * 300) + 10;
-
-    transactions.push({
-      id: `txn-${i}`,
-      amount,
-      date: date.toISOString().split("T")[0],
-      description: isIncome
-        ? "Salary"
-        : `${
-            categories[Math.floor(Math.random() * categories.length)]
-          } Expense`,
-      type,
-      category: isIncome
-        ? "Income"
-        : categories[Math.floor(Math.random() * categories.length)],
-    });
-  }
-
-  return transactions;
-};
-
-const generateGoals = (): Goal[] => {
-  return [
-    {
-      id: "goal-1",
-      name: "Test 1",
-      target: 0,
-      saved: 0,
-      deadline: "null",
-      color: "#4ade80",
-    },
-    {
-      id: "goal-2",
-      name: "Test 2",
-      target: 0,
-      saved: 0,
-      deadline: "null",
-      color: "#60a5fa",
-    },
-    {
-      id: "goal-3",
-      name: "Test 3",
-      target: 0,
-      saved: 0,
-      deadline: "null",
-      color: "#a78bfa",
-    },
-  ];
-};
-
 const COLORS = [
   "#0088FE",
   "#00C49F",
@@ -148,13 +56,24 @@ const COLORS = [
   "#82CA9D",
 ];
 
+const categories = [
+  "Food",
+  "Housing",
+  "Transport",
+  "Entertainment",
+  "Utilities",
+  "Healthcare",
+  "Education",
+  "Shopping",
+  "Other",
+];
+
 const DashboardContent = () => {
   // State
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [showAddMenu, setShowAddMenu] = useState(false);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [newTransaction, setNewTransaction] = useState<Omit<Transaction, "id">>(
     {
@@ -169,9 +88,106 @@ const DashboardContent = () => {
 
   // Initialize data
   useEffect(() => {
-    setTransactions(generateTransactions(50));
-    setGoals(generateGoals());
+    // Load from localStorage if available
+    const savedTransactions = localStorage.getItem("transactions");
+    const savedGoals = localStorage.getItem("goals");
+
+    if (savedTransactions) {
+      setTransactions(JSON.parse(savedTransactions));
+    } else {
+      // Generate sample data if none exists
+      const sampleTransactions = generateTransactions(20);
+      setTransactions(sampleTransactions);
+      localStorage.setItem("transactions", JSON.stringify(sampleTransactions));
+    }
+
+    if (savedGoals) {
+      setGoals(JSON.parse(savedGoals));
+    } else {
+      const sampleGoals = generateGoals();
+      setGoals(sampleGoals);
+      localStorage.setItem("goals", JSON.stringify(sampleGoals));
+    }
   }, []);
+
+  // Save data when it changes
+  useEffect(() => {
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+  }, [transactions]);
+
+  useEffect(() => {
+    localStorage.setItem("goals", JSON.stringify(goals));
+  }, [goals]);
+
+  // Data generation functions
+  const generateTransactions = (count: number): Transaction[] => {
+    const transactions: Transaction[] = [];
+    const currentDate = new Date();
+
+    for (let i = 0; i < count; i++) {
+      const daysAgo = Math.floor(Math.random() * 30);
+      const date = new Date(currentDate);
+      date.setDate(date.getDate() - daysAgo);
+
+      const isIncome = Math.random() > 0.7;
+      const type = isIncome ? "income" : "expense";
+      const amount = isIncome
+        ? Math.floor(Math.random() * 2000) + 500
+        : Math.floor(Math.random() * 300) + 10;
+
+      transactions.push({
+        id: `txn-${Date.now()}-${i}`,
+        amount,
+        date: date.toISOString().split("T")[0],
+        description: isIncome
+          ? "Salary"
+          : `${
+              categories[Math.floor(Math.random() * categories.length)]
+            } Expense`,
+        type,
+        category: isIncome
+          ? "Income"
+          : categories[Math.floor(Math.random() * categories.length)],
+      });
+    }
+
+    return transactions;
+  };
+
+  const generateGoals = (): Goal[] => {
+    return [
+      {
+        id: `goal-${Date.now()}-1`,
+        name: "New Laptop",
+        target: 1200,
+        saved: 450,
+        deadline: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        color: "#4ade80",
+      },
+      {
+        id: `goal-${Date.now()}-2`,
+        name: "Vacation Fund",
+        target: 2500,
+        saved: 1200,
+        deadline: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        color: "#60a5fa",
+      },
+      {
+        id: `goal-${Date.now()}-3`,
+        name: "Emergency Fund",
+        target: 5000,
+        saved: 2300,
+        deadline: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        color: "#a78bfa",
+      },
+    ];
+  };
 
   // Filter transactions by time range
   const filteredTransactions = transactions.filter((txn) => {
@@ -184,12 +200,11 @@ const DashboardContent = () => {
       return txnDate >= oneWeekAgo;
     } else if (timeRange === "month") {
       return (
-        txnDate.getMonth() === currentMonth &&
-        txnDate.getFullYear() === currentYear
+        txnDate.getMonth() === now.getMonth() &&
+        txnDate.getFullYear() === now.getFullYear()
       );
     } else {
-      // year
-      return txnDate.getFullYear() === currentYear;
+      return txnDate.getFullYear() === now.getFullYear();
     }
   });
 
@@ -225,7 +240,10 @@ const DashboardContent = () => {
   const monthlyTrendData = Array.from({ length: 12 }, (_, i) => {
     const monthTransactions = transactions.filter((t) => {
       const txnDate = new Date(t.date);
-      return txnDate.getMonth() === i && txnDate.getFullYear() === currentYear;
+      return (
+        txnDate.getMonth() === i &&
+        txnDate.getFullYear() === new Date().getFullYear()
+      );
     });
 
     const income = monthTransactions
@@ -237,7 +255,7 @@ const DashboardContent = () => {
       .reduce((sum, t) => sum + t.amount, 0);
 
     return {
-      name: new Date(currentYear, i, 1).toLocaleString("default", {
+      name: new Date(new Date().getFullYear(), i, 1).toLocaleString("default", {
         month: "short",
       }),
       income,
@@ -248,11 +266,14 @@ const DashboardContent = () => {
 
   // Handlers
   const handleAddTransaction = () => {
+    if (!newTransaction.amount || !newTransaction.description) return;
+
     const newTxn: Transaction = {
       ...newTransaction,
       id: `txn-${Date.now()}`,
     };
-    setTransactions([newTxn, ...transactions]);
+    const updatedTransactions = [newTxn, ...transactions];
+    setTransactions(updatedTransactions);
     setShowTransactionForm(false);
     setNewTransaction({
       amount: 0,
@@ -263,22 +284,26 @@ const DashboardContent = () => {
     });
   };
 
-  const handleMonthChange = (direction: "prev" | "next") => {
-    if (direction === "prev") {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear(currentYear - 1);
-      } else {
-        setCurrentMonth(currentMonth - 1);
-      }
-    } else {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear(currentYear + 1);
-      } else {
-        setCurrentMonth(currentMonth + 1);
-      }
-    }
+  const handleAddGoal = () => {
+    const newGoal: Goal = {
+      id: `goal-${Date.now()}`,
+      name: "New Goal",
+      target: 1000,
+      saved: 0,
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    };
+    setGoals([...goals, newGoal]);
+    setSelectedGoal(newGoal);
+  };
+
+  const handleUpdateGoal = (updatedGoal: Goal) => {
+    setGoals(
+      goals.map((goal) => (goal.id === updatedGoal.id ? updatedGoal : goal))
+    );
+    setSelectedGoal(null);
   };
 
   const formatCurrency = (amount: number): string => {
@@ -288,25 +313,16 @@ const DashboardContent = () => {
     }).format(amount);
   };
 
-  const getProgressColor = (percentage: number): string => {
-    if (percentage >= 80) return "#4ade80";
-    if (percentage >= 50) return "#60a5fa";
-    if (percentage >= 30) return "#fbbf24";
-    return "#f87171";
+  const getProgressPercentage = (goal: Goal): number => {
+    return Math.min(100, (goal.saved / goal.target) * 100);
   };
 
   return (
     <div className="main-content">
       {/* Header */}
       <header className="header">
-        <h1>Dashboard</h1>
+        <h1>Financial Dashboard</h1>
         <div className="header-actions">
-          <button
-            className="primary-button"
-            onClick={() => setShowTransactionForm(true)}
-          >
-            <FiPlus /> Add Transaction
-          </button>
           <div className="time-range-selector">
             <button
               className={`time-range-btn ${
@@ -362,7 +378,9 @@ const DashboardContent = () => {
             <div className="card-value">{formatCurrency(incomeTotal)}</div>
             <div className="card-trend positive">
               <FiTrendingUp />
-              <span>+12% from last {timeRange}</span>
+              <span>
+                +{Math.floor(Math.random() * 20) + 5}% from last {timeRange}
+              </span>
             </div>
           </div>
 
@@ -374,7 +392,9 @@ const DashboardContent = () => {
             <div className="card-value">{formatCurrency(expensesTotal)}</div>
             <div className="card-trend negative">
               <FiTrendingDown />
-              <span>-5% from last {timeRange}</span>
+              <span>
+                -{Math.floor(Math.random() * 10) + 1}% from last {timeRange}
+              </span>
             </div>
           </div>
         </div>
@@ -389,7 +409,7 @@ const DashboardContent = () => {
               <AreaChart data={monthlyTrendData}>
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                 <Area
                   type="monotone"
                   dataKey="balance"
@@ -439,9 +459,6 @@ const DashboardContent = () => {
             <div className="section-header">
               <FiTarget className="section-icon" />
               <h3>Financial Goals</h3>
-              <button className="add-button">
-                <FiPlus />
-              </button>
             </div>
             <div className="goals-list">
               {goals.map((goal) => (
@@ -462,17 +479,22 @@ const DashboardContent = () => {
                       <div
                         className="progress-fill"
                         style={{
-                          width: `${Math.min(
-                            100,
-                            (goal.saved / goal.target) * 100
-                          )}%`,
+                          width: `${getProgressPercentage(goal)}%`,
                           backgroundColor: goal.color,
                         }}
                       ></div>
                     </div>
+                    <span className="progress-percentage">
+                      {getProgressPercentage(goal).toFixed(0)}%
+                    </span>
                   </div>
                 </div>
               ))}
+              {goals.length === 0 && (
+                <div className="empty-state">
+                  <p>No goals yet. Add your first financial goal!</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -480,7 +502,6 @@ const DashboardContent = () => {
             <div className="section-header">
               <FiCreditCard className="section-icon" />
               <h3>Recent Transactions</h3>
-              <button className="view-all">View All</button>
             </div>
             <div className="transactions-list">
               {recentTransactions.map((txn) => (
@@ -505,9 +526,63 @@ const DashboardContent = () => {
                   </div>
                 </div>
               ))}
+              {transactions.length === 0 && (
+                <div className="empty-state">
+                  <p>No transactions yet. Add your first transaction!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="fab-container">
+        {showAddMenu && (
+          <div className="fab-menu">
+            <button
+              className="fab-menu-item"
+              onClick={() => {
+                setNewTransaction({
+                  ...newTransaction,
+                  type: "income",
+                });
+                setShowTransactionForm(true);
+                setShowAddMenu(false);
+              }}
+            >
+              <FiTrendingUp /> Add Income
+            </button>
+            <button
+              className="fab-menu-item"
+              onClick={() => {
+                setNewTransaction({
+                  ...newTransaction,
+                  type: "expense",
+                });
+                setShowTransactionForm(true);
+                setShowAddMenu(false);
+              }}
+            >
+              <FiTrendingDown /> Add Expense
+            </button>
+            <button
+              className="fab-menu-item"
+              onClick={() => {
+                handleAddGoal();
+                setShowAddMenu(false);
+              }}
+            >
+              <FiTarget /> Add Goal
+            </button>
+          </div>
+        )}
+        <button
+          className="fab-button"
+          onClick={() => setShowAddMenu(!showAddMenu)}
+        >
+          <FiPlus className={showAddMenu ? "rotate-45" : ""} />
+        </button>
       </div>
 
       {/* Transaction Form Modal */}
@@ -515,45 +590,26 @@ const DashboardContent = () => {
         <div className="modal-overlay">
           <div className="transaction-modal">
             <div className="modal-header">
-              <h2>Add New Transaction</h2>
+              <h2>
+                {newTransaction.type === "income"
+                  ? "Add Income"
+                  : "Add Expense"}
+              </h2>
               <button
                 className="close-button"
                 onClick={() => setShowTransactionForm(false)}
               >
-                &times;
+                <FiX />
               </button>
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label>Transaction Type</label>
-                <div className="type-toggle">
-                  <button
-                    className={`toggle-btn ${
-                      newTransaction.type === "income" ? "active" : ""
-                    }`}
-                    onClick={() =>
-                      setNewTransaction({ ...newTransaction, type: "income" })
-                    }
-                  >
-                    Income
-                  </button>
-                  <button
-                    className={`toggle-btn ${
-                      newTransaction.type === "expense" ? "active" : ""
-                    }`}
-                    onClick={() =>
-                      setNewTransaction({ ...newTransaction, type: "expense" })
-                    }
-                  >
-                    Expense
-                  </button>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Amount</label>
+                <label>
+                  <FiDollarSign /> Amount
+                </label>
                 <input
                   type="number"
-                  value={newTransaction.amount}
+                  value={newTransaction.amount || ""}
                   onChange={(e) =>
                     setNewTransaction({
                       ...newTransaction,
@@ -561,10 +617,14 @@ const DashboardContent = () => {
                     })
                   }
                   placeholder="0.00"
+                  min="0"
+                  step="0.01"
                 />
               </div>
               <div className="form-group">
-                <label>Date</label>
+                <label>
+                  <FiCalendar /> Date
+                </label>
                 <input
                   type="date"
                   value={newTransaction.date}
@@ -577,7 +637,9 @@ const DashboardContent = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Description</label>
+                <label>
+                  <FiType /> Description
+                </label>
                 <input
                   type="text"
                   value={newTransaction.description}
@@ -587,11 +649,17 @@ const DashboardContent = () => {
                       description: e.target.value,
                     })
                   }
-                  placeholder="What was this for?"
+                  placeholder={
+                    newTransaction.type === "income"
+                      ? "Salary, Bonus, etc."
+                      : "What was this expense for?"
+                  }
                 />
               </div>
               <div className="form-group">
-                <label>Category</label>
+                <label>
+                  <FiTag /> Category
+                </label>
                 <select
                   value={newTransaction.category}
                   onChange={(e) =>
@@ -601,13 +669,15 @@ const DashboardContent = () => {
                     })
                   }
                 >
-                  <option value="Food">Food</option>
-                  <option value="Housing">Housing</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Entertainment">Entertainment</option>
-                  <option value="Utilities">Utilities</option>
-                  <option value="Healthcare">Healthcare</option>
-                  <option value="Income">Income</option>
+                  {newTransaction.type === "income" ? (
+                    <option value="Income">Income</option>
+                  ) : (
+                    categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
               <div className="form-actions">
@@ -620,8 +690,11 @@ const DashboardContent = () => {
                 <button
                   className="submit-button"
                   onClick={handleAddTransaction}
+                  disabled={
+                    !newTransaction.amount || !newTransaction.description
+                  }
                 >
-                  Add Transaction
+                  Add {newTransaction.type === "income" ? "Income" : "Expense"}
                 </button>
               </div>
             </div>
@@ -639,7 +712,7 @@ const DashboardContent = () => {
                 className="close-button"
                 onClick={() => setSelectedGoal(null)}
               >
-                &times;
+                <FiX />
               </button>
             </div>
             <div className="modal-body">
@@ -667,6 +740,15 @@ const DashboardContent = () => {
                       transform="rotate(-90 60 60)"
                     />
                   </svg>
+                  <div className="progress-text">
+                    {Math.min(
+                      100,
+                      Math.round(
+                        (selectedGoal.saved / selectedGoal.target) * 100
+                      )
+                    )}
+                    %
+                  </div>
                 </div>
                 <div className="goal-stats">
                   <div className="stat-item">
@@ -695,9 +777,89 @@ const DashboardContent = () => {
                   </div>
                 </div>
               </div>
-              <div className="goal-actions">
-                <button className="action-button add-funds">Add Funds</button>
-                <button className="action-button edit-goal">Edit Goal</button>
+
+              <div className="form-group">
+                <label>
+                  <FiInfo /> Goal Name
+                </label>
+                <input
+                  type="text"
+                  value={selectedGoal.name}
+                  onChange={(e) =>
+                    setSelectedGoal({
+                      ...selectedGoal,
+                      name: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <FiDollarSign /> Target Amount
+                </label>
+                <input
+                  type="number"
+                  value={selectedGoal.target || ""}
+                  onChange={(e) =>
+                    setSelectedGoal({
+                      ...selectedGoal,
+                      target: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  min="0"
+                  step="1"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <FiDollarSign /> Saved Amount
+                </label>
+                <input
+                  type="number"
+                  value={selectedGoal.saved || ""}
+                  onChange={(e) =>
+                    setSelectedGoal({
+                      ...selectedGoal,
+                      saved: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  min="0"
+                  max={selectedGoal.target}
+                  step="1"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <FiCalendar /> Deadline
+                </label>
+                <input
+                  type="date"
+                  value={selectedGoal.deadline}
+                  onChange={(e) =>
+                    setSelectedGoal({
+                      ...selectedGoal,
+                      deadline: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="form-actions">
+                <button
+                  className="cancel-button"
+                  onClick={() => setSelectedGoal(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="submit-button"
+                  onClick={() => handleUpdateGoal(selectedGoal)}
+                >
+                  Save Changes
+                </button>
               </div>
             </div>
           </div>

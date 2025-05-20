@@ -2,26 +2,24 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/sidebar/sidebar";
 import Dashboard from "./pages/dashboard/dashboard";
 import "./App.css";
-import FloatingActionButton from "./components/sidebar/floatingButton/floatingButton";
 import Transactions from "./pages/transaction/transaction";
 import Wallet from "./pages/wallet/wallet";
 import Reports from "./pages/reports/reports";
 import AuthForm from "./pages/auth/authForm";
-import { ProfilePage } from './pages/profile/profile';
+import { ProfilePage } from "./pages/profile/profile";
 import Goals from "./pages/goals/goals";
 
 function MainLayout() {
   return (
     <div className="app-container">
       <Sidebar />
-      <FloatingActionButton />
       <div className="content-area">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/reports" element={<Reports />} />
-           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/goals" element={<Goals />} />
         </Routes>
       </div>
