@@ -11,7 +11,7 @@ namespace BudgetTracker.Domain.Entities
     public class BudgetLimit
     {
         public int Id { get; set; }
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         [Required]
         public string Category { get; set; } = string.Empty;

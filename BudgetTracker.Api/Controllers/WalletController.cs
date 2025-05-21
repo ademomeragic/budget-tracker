@@ -50,5 +50,21 @@ namespace BudgetTracker.Api.Controllers
             if (!success) return NotFound();
             return NoContent();
         }
+
+        [HttpPost("transfer")]
+        public async Task<IActionResult> TransferBetweenWallets([FromBody] WalletTransferDto dto)
+        {
+            var userId = User.GetUserId();
+            try
+            {
+                await _walletService.TransferBetweenWalletsAsync(userId, dto);
+                return Ok(new { message = "Transfer successful." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
     }
 }

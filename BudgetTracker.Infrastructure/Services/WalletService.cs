@@ -16,11 +16,13 @@ namespace BudgetTracker.Infrastructure.Services
     {
         private readonly BudgetDbContext _context;
         private readonly IMapper _mapper;
+        private readonly ITransactionService _transactionService;
 
-        public WalletService(BudgetDbContext context, IMapper mapper)
+        public WalletService(BudgetDbContext context, IMapper mapper, ITransactionService transactionService)
         {
             _context = context;
             _mapper = mapper;
+            _transactionService = transactionService;
         }
 
         public async Task<List<WalletDto>> GetUserWalletsAsync(string userId)
@@ -64,5 +66,54 @@ namespace BudgetTracker.Infrastructure.Services
 
             return true;
         }
+
+        public async Task<bool> TransferBetweenWalletsAsync(string userId, WalletTransferDto dto)
+        {
+            if (dto.FromWalletId == dto.ToWalletId)
+                throw new ArgumentException("Cannot transfer to the same wallet.");
+
+            var fromWallet = await _context.Wallets
+                .FirstOrDefaultAsync(w => w.Id == dto.FromWalletId && w.UserId == userId);
+            var toWallet = await _context.Wallets
+                .FirstOrDefaultAsync(w => w.Id == dto.ToWalletId && w.UserId == userId);
+
+            if (fromWallet == null || toWallet == null)
+                throw new Exception("Wallet(s) not found or do not belong to user.");
+
+            if (dto.Amount <= 0)
+                throw new ArgumentException("Transfer amount must be greater than zero.");
+
+            if (fromWallet.Balance < dto.Amount)
+                throw new InvalidOperationException("Insufficient funds.");
+
+            // Create Expense Transaction for sender
+            var expenseTransaction = new TransactionDto
+            {
+                Amount = dto.Amount,
+                Date = DateTime.Now,
+                Description = $"Transfer to {toWallet.Name}",
+                Type = "expense",
+                WalletId = fromWallet.Id,
+                CategoryId = 999 // Default category or one defined as "Internal Transfer"
+            };
+
+            // Create Income Transaction for receiver
+            var incomeTransaction = new TransactionDto
+            {
+                Amount = dto.Amount,
+                Date = DateTime.Now,
+                Description = $"Transfer from {fromWallet.Name}",
+                Type = "income",
+                WalletId = toWallet.Id,
+                CategoryId = 998 // Same default category
+            };
+
+            await _transactionService.CreateTransactionAsync(userId, expenseTransaction);
+            await _transactionService.CreateTransactionAsync(userId, incomeTransaction);
+
+            return true;
+        }
+
+
     }
 }

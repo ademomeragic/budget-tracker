@@ -1,25 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using BudgetTracker.Application.Dtos;
 using BudgetTracker.Domain.Entities;
 
-namespace BudgetTracker.Application.MappingProfiles
+public class TransactionMappingProfile : Profile
 {
-    public class TransactionMappingProfile : Profile
+    public TransactionMappingProfile()
     {
-        public TransactionMappingProfile()
-        {
-            CreateMap<Transaction, TransactionDto>()
-                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date.ToString("yyyy-MM-dd")));
+        // From entity to DTO — direct DateTime mapping
+        CreateMap<Transaction, TransactionDto>();
 
-            CreateMap<TransactionDto, Transaction>()
-                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => DateTime.Parse(src.Date)))
-                .ForMember(dest => dest.Id, opt => opt.Ignore()); // Ignore ID coming in
-        }
+        // From DTO to entity — also direct DateTime mapping
+        CreateMap<TransactionDto, Transaction>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId));
     }
 }
-

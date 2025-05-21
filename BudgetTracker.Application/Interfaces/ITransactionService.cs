@@ -12,6 +12,7 @@ namespace BudgetTracker.Application.Interfaces
         Task<List<TransactionDto>> GetUserTransactionsAsync(string userId, int month, int year);
         Task<TransactionDto> CreateTransactionAsync(string userId, TransactionDto dto);
         Task<TransactionDto> UpdateTransactionAsync(int id, string userId, TransactionDto dto);
+        Task<List<TransactionDto>> GetWalletTransactionsAsync(int walletId, string userId);
         Task<List<TransactionDto>> GetAllUserTransactionsAsync(string userId);
         Task<bool> DeleteTransactionAsync(int id, string userId);
     }

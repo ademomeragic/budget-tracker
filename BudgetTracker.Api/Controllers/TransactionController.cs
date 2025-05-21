@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using BudgetTracker.Infrastructure.Services;
 
 namespace BudgetTracker.Api.Controllers
 {
@@ -27,6 +28,15 @@ namespace BudgetTracker.Api.Controllers
             var transactions = await _service.GetUserTransactionsAsync(userId, month, year);
             return Ok(transactions);
         }
+
+        [HttpGet("wallet/{walletId}")]
+        public async Task<IActionResult> GetWalletTransactions(int walletId)
+        {
+            var userId = User.GetUserId();
+            var txns = await _service.GetWalletTransactionsAsync(walletId, userId);
+            return Ok(txns);
+        }
+
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAllUserTransactions()

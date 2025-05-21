@@ -13,6 +13,8 @@ namespace BudgetTracker.Application.Interfaces
         Task<WalletDto> CreateWalletAsync(string userId, WalletCreateDto dto);
         Task<WalletDto> UpdateWalletAsync(int id, string userId, WalletUpdateDto dto);
         Task<bool> DeleteWalletAsync(int id, string userId);
+        Task<bool> TransferBetweenWalletsAsync(string userId, WalletTransferDto dto);
+
     }
 }
 

@@ -1,4 +1,4 @@
-using BudgetTracker.Infrastructure;
+﻿using BudgetTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using BudgetTracker.Application.MappingProfiles;
 using BudgetTracker.Application.Interfaces;
@@ -13,7 +13,7 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoMapper(typeof(BudgetLimitMappingProfile));
 builder.Services.AddAutoMapper(typeof(TransactionMappingProfile));
-
+builder.Services.AddAutoMapper(typeof(CategoryMappingProfile));
 
 // Add services to the container.
 
@@ -30,6 +30,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IBudgetLimitService, BudgetLimitService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IGoalService, GoalService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddHostedService<GoalNotificationService>();
+builder.Services.AddScoped<IFloatNoteService, FloatNoteService>();
+
 
 
 
@@ -92,7 +98,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials(); // ✅ key part
     });
 });
 
@@ -118,5 +125,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+/* using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+    context.Transactions.RemoveRange(context.Transactions);
+    context.SaveChanges();
+} */
 
 app.Run();
