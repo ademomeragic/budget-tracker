@@ -99,17 +99,22 @@
   background-color: #ffdddd;
   color: #c0392b;
   padding: 10px;
+  font-size: 14px
 }
 
 .cat-type.income {
-  background-color: #ddffdd;
-  color: #27ae60;
+  background-color: #c9f0c9;
+  color: #146b39;
+  padding: 10px;
+  font-size: 14px
 }
 
 .delete-btn {
   padding: 10px;
-  width: 60px;
-  background-color: #e74c3c;
+  font-size: 14px;
+  width: 70px;
+  height: 38px;
+  background-color: #ab1906;
   color: white;
   border: none;
   border-radius: 4px;
