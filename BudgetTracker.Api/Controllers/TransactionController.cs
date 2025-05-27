@@ -15,6 +15,7 @@ namespace BudgetTracker.Api.Controllers
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _service;
+    
 
         public TransactionController(ITransactionService service)
         {
@@ -22,29 +23,30 @@ namespace BudgetTracker.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTransactions([FromQuery] int month, [FromQuery] int year)
+        public async Task<IActionResult> GetUserTransactions(int month, int year, [FromQuery] string? targetCurrency)
         {
             var userId = User.GetUserId();
-            var transactions = await _service.GetUserTransactionsAsync(userId, month, year);
+            var transactions = await _service.GetUserTransactionsAsync(userId, month, year, targetCurrency);
             return Ok(transactions);
         }
 
         [HttpGet("wallet/{walletId}")]
-        public async Task<IActionResult> GetWalletTransactions(int walletId)
+        public async Task<IActionResult> GetWalletTransactions(int walletId, [FromQuery] string? targetCurrency)
         {
             var userId = User.GetUserId();
-            var txns = await _service.GetWalletTransactionsAsync(walletId, userId);
-            return Ok(txns);
+            var transactions = await _service.GetWalletTransactionsAsync(walletId, userId, targetCurrency);
+            return Ok(transactions);
         }
+
 
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllUserTransactions()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var transactions = await _service.GetAllUserTransactionsAsync(userId);
-            return Ok(transactions);
-        }
+public async Task<IActionResult> GetAllUserTransactions([FromQuery] string? targetCurrency = null)
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var transactions = await _service.GetAllUserTransactionsAsync(userId, targetCurrency);
+    return Ok(transactions);
+}
 
 
         [HttpPost]

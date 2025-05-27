@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BudgetTracker.Application.Dtos;
 using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Services;
 using BudgetTracker.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,12 +18,15 @@ namespace BudgetTracker.Infrastructure.Services
         private readonly BudgetDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITransactionService _transactionService;
+        private readonly ICurrencyConversionService _currencyConverter;
 
-        public WalletService(BudgetDbContext context, IMapper mapper, ITransactionService transactionService)
+        public WalletService(ICurrencyConversionService currencyConverter, BudgetDbContext context, IMapper mapper, ITransactionService transactionService, IExchangeRateService exchangeRateService)
         {
             _context = context;
             _mapper = mapper;
             _transactionService = transactionService;
+            _currencyConverter = currencyConverter;
+            _exchangeRateService = exchangeRateService;
         }
 
         public async Task<List<WalletDto>> GetUserWalletsAsync(string userId)
@@ -34,8 +38,27 @@ namespace BudgetTracker.Infrastructure.Services
             return _mapper.Map<List<WalletDto>>(wallets);
         }
 
+        private readonly HashSet<string> ValidCurrencyCodes = new HashSet<string>
+{
+    "BAM", "USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD" // add more as needed
+};
+ public async Task<decimal> GetConvertedBalanceAsync(int walletId, string targetCurrency)
+    {
+        var wallet = await _context.Wallets.FindAsync(walletId);
+        if (wallet == null) throw new Exception("Wallet not found");
+
+        var converted = await _currencyConverter.ConvertAsync(wallet.CurrencyCode, targetCurrency, wallet.Balance);
+        return converted ?? 0;
+    }
+private readonly IExchangeRateService _exchangeRateService;
+
         public async Task<WalletDto> CreateWalletAsync(string userId, WalletCreateDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.CurrencyCode) || !ValidCurrencyCodes.Contains(dto.CurrencyCode.ToUpper()))
+            {
+                dto.CurrencyCode = "BAM"; // fallback default
+            }
+
             var wallet = _mapper.Map<Wallet>(dto);
             wallet.UserId = userId;
 
@@ -44,17 +67,49 @@ namespace BudgetTracker.Infrastructure.Services
 
             return _mapper.Map<WalletDto>(wallet);
         }
+        
+        public async Task<WalletDto> GetWalletByIdAsync(int id, string userId)
+{
+    var wallet = await _context.Wallets
+        .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
 
-        public async Task<WalletDto> UpdateWalletAsync(int id, string userId, WalletUpdateDto dto)
+    if (wallet == null) throw new Exception("Wallet not found");
+
+    return _mapper.Map<WalletDto>(wallet);
+}
+
+public async Task<decimal> GetConvertedWalletBalanceAsync(int walletId, string userId, string targetCurrency)
+{
+    var wallet = await _context.Wallets
+        .FirstOrDefaultAsync(w => w.Id == walletId && w.UserId == userId);
+
+    if (wallet == null) throw new Exception("Wallet not found");
+
+    // Example: Assuming you have injected IExchangeRateService as _exchangeRateService
+    var convertedAmount = await _exchangeRateService.ConvertCurrencyAsync(wallet.CurrencyCode, targetCurrency, wallet.Balance);
+
+    if (convertedAmount == null) throw new Exception("Conversion rate not found");
+
+    return convertedAmount.Value;
+}
+
+
+public async Task<WalletDto> UpdateWalletAsync(int id, string userId, WalletUpdateDto dto)
         {
             var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
             if (wallet == null) throw new Exception("Wallet not found");
+
+            if (string.IsNullOrWhiteSpace(dto.CurrencyCode) || !ValidCurrencyCodes.Contains(dto.CurrencyCode.ToUpper()))
+            {
+                dto.CurrencyCode = wallet.CurrencyCode ?? "BAM";
+            }
 
             _mapper.Map(dto, wallet);
             await _context.SaveChangesAsync();
 
             return _mapper.Map<WalletDto>(wallet);
         }
+
 
         public async Task<bool> DeleteWalletAsync(int id, string userId)
         {
@@ -66,6 +121,22 @@ namespace BudgetTracker.Infrastructure.Services
 
             return true;
         }
+
+        public async Task<decimal> GetWalletBalanceAsync(int walletId, string targetCurrency)
+{
+    var wallet = await _context.Wallets.FindAsync(walletId);
+    if (wallet == null) throw new Exception("Wallet not found");
+
+    if (wallet.CurrencyCode == targetCurrency)
+        return wallet.Balance;
+
+    var converted = await _exchangeRateService.ConvertCurrencyAsync(wallet.CurrencyCode, targetCurrency, wallet.Balance);
+
+    if (converted == null) throw new Exception("Conversion rate unavailable");
+
+    return converted.Value;
+}
+
 
         public async Task<bool> TransferBetweenWalletsAsync(string userId, WalletTransferDto dto)
         {

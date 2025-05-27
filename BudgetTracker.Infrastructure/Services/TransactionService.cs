@@ -16,51 +16,116 @@ namespace BudgetTracker.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly IGoalService _goalService;
         private readonly ITransactionService _transactionService;
+        private readonly IExchangeRateService _exchangeRateService;
 
-        public TransactionService(BudgetDbContext context, IMapper mapper, IGoalService goalService)
+        public TransactionService(BudgetDbContext context, IMapper mapper, IGoalService goalService, IExchangeRateService exchangeRateService)
         {
             _context = context;
             _mapper = mapper;
             _goalService = goalService;
+            _exchangeRateService = exchangeRateService;
         }
 
+        
 
-        public async Task<List<TransactionDto>> GetUserTransactionsAsync(string userId, int month, int year)
-        {
-            var userTransactions = await _context.Transactions
-                .Include(t => t.Wallet)
-                .Where(t => t.Wallet.UserId == userId)
-                .ToListAsync();
-
-            var filtered = userTransactions
-                .Where(t => t.Date.Month == month && t.Date.Year == year)
-                .OrderByDescending(t => t.Date)
-                .ToList();
-
-            return _mapper.Map<List<TransactionDto>>(filtered);
-        }
-
-        public async Task<List<TransactionDto>> GetWalletTransactionsAsync(int walletId, string userId)
+        public async Task<List<TransactionDto>> GetUserTransactionsAsync(string userId, int month, int year, string? targetCurrency = null)
         {
             var transactions = await _context.Transactions
                 .Include(t => t.Wallet)
-                .Where(t => t.Wallet.Id == walletId && t.Wallet.UserId == userId)
-                .OrderByDescending(t => t.Date)
+                .Where(t => t.Wallet.UserId == userId && t.Date.Month == month && t.Date.Year == year)
                 .ToListAsync();
 
-            return _mapper.Map<List<TransactionDto>>(transactions);
+            var result = new List<TransactionDto>();
+
+            foreach (var t in transactions)
+            {
+                var dto = _mapper.Map<TransactionDto>(t);
+                dto.CurrencyCode = t.Wallet.CurrencyCode;
+
+                if (!string.IsNullOrEmpty(targetCurrency) && targetCurrency != dto.CurrencyCode)
+                {
+                    dto.ConvertedAmount = await _exchangeRateService.ConvertCurrencyAsync(dto.CurrencyCode, targetCurrency, dto.Amount);
+                    dto.ConvertedCurrencyCode = targetCurrency;
+                }
+
+                result.Add(dto);
+            }
+
+            return result;
         }
 
-        public async Task<List<TransactionDto>> GetAllUserTransactionsAsync(string userId)
-        {
-            var transactions = await _context.Transactions
-                .Include(t => t.Wallet)
-                .Where(t => t.Wallet.UserId == userId)
-                .OrderByDescending(t => t.Date)
-                .ToListAsync();
+        public async Task<decimal?> ConvertTransactionAmountAsync(Transaction transaction, string targetCurrency)
+{
+    if (transaction == null) return null;
 
-            return _mapper.Map<List<TransactionDto>>(transactions);
-        }
+    // Get wallet's currency code (assumed to be loaded or load if needed)
+    var wallet = await _context.Wallets.FindAsync(transaction.WalletId);
+    if (wallet == null) return null;
+
+    var convertedAmount = await _exchangeRateService.ConvertCurrencyAsync(wallet.CurrencyCode, targetCurrency, transaction.Amount);
+    return convertedAmount;
+}
+
+        public async Task<List<TransactionDto>> GetWalletTransactionsAsync(int walletId, string userId, string? targetCurrency = null)
+{
+    var transactions = await _context.Transactions
+        .Include(t => t.Wallet)
+        .Where(t => t.Wallet.Id == walletId && t.Wallet.UserId == userId)
+        .OrderByDescending(t => t.Date)
+        .ToListAsync();
+
+    var result = new List<TransactionDto>();
+
+    foreach (var t in transactions)
+    {
+        result.Add(await MapAndConvertTransaction(t, targetCurrency));
+    }
+
+    return result;
+}
+
+public async Task<List<TransactionDto>> GetAllUserTransactionsAsync(string userId, string? targetCurrency = null)
+{
+    var transactions = await _context.Transactions
+        .Include(t => t.Wallet)
+        .Where(t => t.Wallet.UserId == userId)
+        .OrderByDescending(t => t.Date)
+        .ToListAsync();
+
+    var result = new List<TransactionDto>();
+
+    foreach (var t in transactions)
+    {
+        result.Add(await MapAndConvertTransaction(t, targetCurrency));
+    }
+
+    return result;
+}
+
+// ✅ New Private Helper Method
+private async Task<TransactionDto> MapAndConvertTransaction(Transaction t, string? targetCurrency)
+{
+    var dto = _mapper.Map<TransactionDto>(t);
+    dto.CurrencyCode = t.Wallet.CurrencyCode;
+
+    if (!string.IsNullOrEmpty(targetCurrency) && targetCurrency != dto.CurrencyCode)
+    {
+        dto.ConvertedAmount = await _exchangeRateService.ConvertCurrencyAsync(dto.CurrencyCode, targetCurrency, dto.Amount);
+        dto.ConvertedCurrencyCode = targetCurrency;
+        Console.WriteLine($"Converted {dto.Amount} {dto.CurrencyCode} to {dto.ConvertedAmount} {targetCurrency}");
+    }
+    else
+    {
+        dto.ConvertedAmount = dto.Amount;
+        dto.ConvertedCurrencyCode = dto.CurrencyCode;
+        Console.WriteLine($"No conversion needed for {dto.Amount} {dto.CurrencyCode}");
+    }
+
+    return dto;
+}
+
+
+
 
         public async Task<TransactionDto> CreateTransactionAsync(string userId, TransactionDto dto)
         {

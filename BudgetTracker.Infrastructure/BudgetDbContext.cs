@@ -20,6 +20,7 @@ namespace BudgetTracker.Infrastructure
         public DbSet<Goal> Goals { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<FloatNote> FloatNotes { get; set; }
+        public DbSet<ExchangeRate> ExchangeRates { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

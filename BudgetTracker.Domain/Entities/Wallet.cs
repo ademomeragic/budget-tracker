@@ -15,6 +15,7 @@ namespace BudgetTracker.Domain.Entities
         public string? UserId { get; set; }
         public ApplicationUser? User { get; set; }
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+        public string CurrencyCode { get; set; } = "BAM"; 
 
     }
 }

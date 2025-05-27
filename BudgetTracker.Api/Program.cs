@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using BudgetTracker.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoMapper(typeof(BudgetLimitMappingProfile));
@@ -35,6 +36,10 @@ builder.Services.AddScoped<IGoalService, GoalService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<GoalNotificationService>();
 builder.Services.AddScoped<IFloatNoteService, FloatNoteService>();
+builder.Services.AddHttpClient<IExchangeRateService, ExchangeRateService>();
+builder.Services.AddHostedService<ExchangeRateUpdateHostedService>();
+builder.Services.AddScoped<ICurrencyConversionService, CurrencyConversionService>();
+builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
 
 
@@ -114,7 +119,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.Use(async (context, next) =>
 {
     Console.WriteLine($"[REQUEST] {context.Request.Method} {context.Request.Path}");

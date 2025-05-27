@@ -1,8 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'https://localhost:7173/api', // adjust your actual port
-  withCredentials: true,
+  baseURL: "http://localhost:5148/api", // adjust your actual port
 });
 
 interface NotificationPreferences {
@@ -35,7 +34,10 @@ export const deleteNotification = async (id: number) => {
   await api.delete(`/notification/${id}`);
 };
 
-export const updatePassword = async (data: { currentPassword: string; newPassword: string }) => {
+export const updatePassword = async (data: {
+  currentPassword: string;
+  newPassword: string;
+}) => {
   await api.post("/profile/change-password", data);
 };
 
@@ -48,7 +50,9 @@ export const fetchUserSettings = async (): Promise<UserSettings> => {
   return res.data;
 };
 
-export const updateNotificationPreferences = async (preferences: NotificationPreferences) => {
+export const updateNotificationPreferences = async (
+  preferences: NotificationPreferences
+) => {
   await api.put("/profile/notification-preferences", preferences);
 };
 
@@ -59,7 +63,11 @@ export const fetchFloatNotes = async () => {
   return res.data;
 };
 
-export const createFloatNote = async (data: { content: string; color: string; displayUntil?: string }) => {
+export const createFloatNote = async (data: {
+  content: string;
+  color: string;
+  displayUntil?: string;
+}) => {
   const res = await api.post("/floatnote", data);
   return res.data;
 };
@@ -68,5 +76,14 @@ export const deleteFloatNote = async (id: number) => {
   await api.delete(`/floatnote/${id}`);
 };
 
-export default api;
+export const fetchConvertedBalance = async (
+  walletId: number,
+  currency: string
+) => {
+  const res = await api.get(
+    `/wallet/${walletId}/converted-balance/${currency}`
+  );
+  return res.data;
+};
 
+export default api;

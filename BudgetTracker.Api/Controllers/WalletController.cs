@@ -18,6 +18,17 @@ namespace BudgetTracker.Api.Controllers
             _walletService = walletService;
         }
 
+        [HttpGet("{id}/converted-balance/{currency}")]
+public async Task<IActionResult> GetConvertedBalance(int id, string currency)
+{
+    var userId = User.GetUserId();
+    var wallet = await _walletService.GetWalletByIdAsync(id, userId);
+    if (wallet == null) return NotFound();
+
+    var convertedBalance = await _walletService.GetConvertedWalletBalanceAsync(id, userId, currency);
+    return Ok(new { convertedBalance, currency });
+}
+
         [HttpGet]
         public async Task<IActionResult> GetWallets()
         {

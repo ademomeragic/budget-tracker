@@ -12,6 +12,7 @@ namespace BudgetTracker.Application.Dtos
         public string Name { get; set; } = string.Empty;
         public decimal Balance { get; set; }
         public string Type { get; set; } = "account";
+        public string CurrencyCode { get; set; } = "BAM"; 
     }
 }
 

@@ -17,7 +17,7 @@ const AuthForm: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://localhost:7173/api/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -61,9 +61,9 @@ const AuthForm: React.FC = () => {
           <button type="submit">Sign In</button>
           {error && <p className="error-msg">{error}</p>}
           <p className="register-link">
-          Don’t have an account? <span onClick={() => navigate("/register")}>Create one</span>
+            Don’t have an account?{" "}
+            <span onClick={() => navigate("/register")}>Create one</span>
           </p>
-
         </form>
       </div>
     </div>
