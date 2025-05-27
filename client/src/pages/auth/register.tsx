@@ -21,50 +21,51 @@ export default function Register() {
     return hasUppercase && hasNumber;
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const { username, password, confirmPassword } = form;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { username, password, confirmPassword } = form;
 
-  // Client-side validation
-  if (password !== confirmPassword) {
-    setError("Passwords do not match");
-    return;
-  }
-
-  if (!validatePassword(password)) {
-    setError("Password must include at least one uppercase letter and one number");
-    return;
-  }
-
-  try {
-    const response = await fetch("https://localhost:7173/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!response.ok) {
-      const contentType = response.headers.get("content-type");
-      let errorMessage = "Registration failed";
-
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        if (data?.message) errorMessage = data.message;
-      } else {
-        const text = await response.text();
-        if (text) errorMessage = text;
-      }
-
-      throw new Error(errorMessage);
+    // Client-side validation
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
     }
 
-    alert("Registration successful. You can now log in.");
-    navigate("/auth");
-  } catch (err: any) {
-    setError(err.message || "An unknown error occurred.");
-  }
-};
+    if (!validatePassword(password)) {
+      setError(
+        "Password must include at least one uppercase letter and one number"
+      );
+      return;
+    }
 
+    try {
+      const response = await fetch("https://localhost:7173/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Registration failed";
+
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          if (data?.message) errorMessage = data.message;
+        } else {
+          const text = await response.text();
+          if (text) errorMessage = text;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      alert("Registration successful. You can now log in.");
+      navigate("/auth");
+    } catch (err: any) {
+      setError(err.message || "An unknown error occurred.");
+    }
+  };
 
   return (
     <div className="register-container">

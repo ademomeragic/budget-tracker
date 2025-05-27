@@ -61,9 +61,9 @@ const AuthForm: React.FC = () => {
           <button type="submit">Sign In</button>
           {error && <p className="error-msg">{error}</p>}
           <p className="register-link">
-          Don’t have an account? <span onClick={() => navigate("/register")}>Create one</span>
+            Don’t have an account?{" "}
+            <span onClick={() => navigate("/register")}>Create one</span>
           </p>
-
         </form>
       </div>
     </div>
