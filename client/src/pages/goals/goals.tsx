@@ -14,6 +14,17 @@ interface Goal {
   startDate: string;
   endDate: string;
   type: string;
+  walletName?: string;
+}
+
+interface GoalPreview {
+  name: string;
+  categoryName: string;
+  walletName: string;
+  targetAmount: number;
+  startDate: string;
+  endDate: string;
+  type: string;
 }
 
 interface Category {
@@ -32,6 +43,7 @@ export default function Goals() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [goalType, setGoalType] = useState<"expense" | "income">("expense");
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [previewGoal, setPreviewGoal] = useState<Partial<Goal> | null>(null); 
 
   const [form, setForm] = useState({
     name: "",
@@ -51,6 +63,26 @@ export default function Goals() {
     fetchCategories(goalType);
     resetForm(); // reset form when switching tabs
   }, [goalType]);
+
+  useEffect(() => {
+    if (form.name && form.targetAmount && form.startDate && form.endDate) {
+      const category = categories.find(c => c.id === form.categoryId);
+      const wallet = wallets.find(w => w.id === form.walletId);
+
+      setPreviewGoal({
+        name: form.name,
+        categoryName: category?.name || "",
+        targetAmount: parseFloat(form.targetAmount) || 0,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        type: goalType,
+        walletId: form.walletId,
+        walletName: wallet?.name || ""
+      });
+    } else {
+      setPreviewGoal(null);
+    }
+  }, [form, categories, wallets, goalType]);
 
   const fetchGoals = async () => {
     const res = await api.get("/goal");
@@ -200,7 +232,23 @@ export default function Goals() {
               <button onClick={() => handleEdit(goal)}>Edit</button>
               <button onClick={() => handleDelete(goal.id)}>Delete</button>
             </div>
+            
+            {/* Preview Section */}
+            {previewGoal && (
+              <div className="goal-preview">
+                <h3>Goal Preview</h3>
+                <div className="preview-content">
+                  <p><strong>Name:</strong> {previewGoal.name}</p>
+                  <p><strong>Type:</strong> {goalType}</p>
+                  <p><strong>Category:</strong> {previewGoal.categoryName}</p>
+                  <p><strong>Wallet:</strong> {previewGoal.walletName}</p>
+                  <p><strong>Target Amount:</strong> {previewGoal.targetAmount} KM</p>
+                  <p><strong>Duration:</strong> {previewGoal.startDate} to {previewGoal.endDate}</p>
+                </div>
+              </div>
+            )}
           </li>
+          
         ))}
       </ul>
     </div>
