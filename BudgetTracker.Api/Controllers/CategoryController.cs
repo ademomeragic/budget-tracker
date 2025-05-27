@@ -33,5 +33,18 @@ namespace BudgetTracker.Api.Controllers
             var category = await _service.CreateCategoryAsync(dto, userId);
             return Ok(category);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCategory(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var success = await _service.DeleteCategoryAsync(id, userId);
+
+            if (!success)
+                return NotFound(new { message = "Category not found or access denied" });
+
+            return NoContent(); // 204 No Content
+        }
+
     }
 }

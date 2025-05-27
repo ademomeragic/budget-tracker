@@ -16,6 +16,8 @@ import Categories from './pages/categories/categories';
 import Goals from './pages/goals/goals';
 import Profile from './pages/profile/profile';
 import FloatNotePanel from "./components/floatnote/FloatNotePanel";
+import GoalsAndCategories from "./pages/categories and goals/CategoriesAndGoals";
+
 function MainLayout() {
   return (
     <div className="app-container">
@@ -66,7 +68,7 @@ function MainLayout() {
             path="/goals"
             element={
               <PrivateRoute>
-                <Goals />
+                <GoalsAndCategories />
               </PrivateRoute>
             }
           />

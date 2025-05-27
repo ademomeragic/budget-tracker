@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/api'; // ensures credentials & baseURL are applied
-import './categories.css';
+
+// import './categories.css';
 
 interface Category {
   id: number;
@@ -29,6 +30,15 @@ const Categories = () => {
       fetchCategories(); // Refresh after creation
     } catch (error) {
       console.error('Error creating category', error);
+    }
+  };
+
+   const deleteCategory = async (id: number) => {
+    try {
+      await api.delete(`/category/${id}`);
+      fetchCategories();
+    } catch (error) {
+      console.error('Error deleting category', error);
     }
   };
 
@@ -65,6 +75,12 @@ const Categories = () => {
           <li key={cat.id} className="category-item">
             <span className="cat-name">{cat.name}</span>
             <span className={`cat-type ${cat.type}`}>{cat.type}</span>
+            <button
+              className="delete-btn"
+              onClick={() => deleteCategory(cat.id)}
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>

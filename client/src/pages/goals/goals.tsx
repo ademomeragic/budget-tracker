@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/api";
-import "./goals.css";
+
+// import "./goals.css";
 
 interface Goal {
   id: number;
@@ -127,7 +128,7 @@ export default function Goals() {
 
   return (
     <div className="goals-page">
-      <h2>{goalType === "expense" ? "Spending Goals" : "Income Goals"}</h2>
+      <h2 className="page-title">{goalType === "expense" ? "Spending Goals" : "Income Goals"}</h2>
 
       <div className="goal-tabs">
         <button

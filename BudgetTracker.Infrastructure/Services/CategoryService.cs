@@ -50,5 +50,19 @@ namespace BudgetTracker.Infrastructure.Services
 
             return _mapper.Map<CategoryDto>(category);
         }
+
+        public async Task<bool> DeleteCategoryAsync(int id, string userId)
+        {
+            var category = await _context.Categories
+                .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+            if (category == null)
+                return false;
+
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
     }
 }

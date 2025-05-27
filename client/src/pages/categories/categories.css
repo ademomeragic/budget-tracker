@@ -18,6 +18,16 @@
   margin-bottom: 1rem;
 }
 
+.type-selector select{
+  margin-left: 10px;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: none;
+  background: #333;
+  color: #f0f0f0;
+
+}
+
 .category-form {
   display: flex;
   gap: 0.5rem;

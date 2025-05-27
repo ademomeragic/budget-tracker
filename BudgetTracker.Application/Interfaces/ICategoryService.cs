@@ -11,6 +11,7 @@ namespace BudgetTracker.Application.Interfaces
     {
         Task<List<CategoryDto>> GetAllCategoriesAsync(string type, string userId);
         Task<CategoryDto> CreateCategoryAsync(CategoryCreateDto dto, string userId);
+        Task<bool> DeleteCategoryAsync(int id, string userId);
     }
 }
 
