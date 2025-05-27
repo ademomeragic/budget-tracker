@@ -105,6 +105,34 @@ export default function Goals() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const payload = {
+      name: form.name,
+      categoryId: form.categoryId,
+      walletId: form.walletId,
+      targetAmount: parseFloat(form.targetAmount),
+      startDate: form.startDate,
+      endDate: form.endDate,
+      type: goalType
+    };
+
+    try {
+      if (editingId) {
+        await api.put(`/goal/${editingId}`, payload);
+      } else {
+        await api.post("/goal", payload);
+      }
+      
+      // Refresh the goals list
+      await fetchGoals();
+      resetForm();
+    } catch (error) {
+      console.error("Error saving goal:", error);
+    }
+  };
+
   const resetForm = () => {
     setForm({
       name: "",
@@ -116,6 +144,8 @@ export default function Goals() {
     });
     setEditingId(null);
   };
+
+  
 
   const handleSave = async () => {
     const payload = {

@@ -13,6 +13,7 @@ namespace BudgetTracker.Application.Dtos
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = "";
         public int? WalletId { get; set; }
+        public string? WalletName { get; set; }
         public decimal TargetAmount { get; set; }
         public decimal CurrentAmount { get; set; }
         public DateTime? StartDate { get; set; }
