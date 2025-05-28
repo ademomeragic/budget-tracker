@@ -1,0 +1,99 @@
+.profile-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 32px;
+  background-color: var(--card-bg, #2b2b40);
+  border-radius: var(--radius, 12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: var(--text-light, #e0e0e0);
+  font-family: var(--font-main, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif);
+}
+
+.profile-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--highlight, #4ade80);
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile-section {
+  margin-bottom: 40px;
+}
+
+.profile-section h3 {
+  font-size: 1.3rem;
+  color: var(--text-muted, #a0a0b0);
+  margin-bottom: 16px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 4px;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-form input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background-color: #1e1e2f;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.profile-form label {
+  font-size: 0.95rem;
+  color: var(--text-muted, #a0a0b0);
+  margin-bottom: -6px;
+}
+
+.profile-form button {
+  background-color: var(--primary, #3b82f6);
+  color: white;
+  border: none;
+  padding: 12px;
+  font-weight: bold;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.profile-form button:hover {
+  background-color: #2563eb;
+}
+
+.profile-message,
+.profile-error {
+  margin-top: 12px;
+  font-size: 0.95rem;
+}
+
+.profile-message {
+  color: var(--highlight, #4ade80);
+}
+
+.profile-error {
+  color: var(--error, #ef4444);
+}
+
+.currency-dropdown {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background-color: #1e1e2f;
+  color: #fff;
+  margin-top: 4px;
+}
+
+.currency-hint {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 4px;
+  display: block;
+}
