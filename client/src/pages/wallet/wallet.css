@@ -204,14 +204,20 @@ p {
 }
 
 .add-btn {
-  background-color: var(--primary);
+  background-color: #1a73e8;
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm);
-  font-weight: 500;
-  cursor: pointer;
   border: none;
-  font-family: inherit;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 20px 0;
+  transition: background-color 0.3s;
+}
+
+.add-btn svg {
+  margin-top: 1px;
+  color: white;
 }
 
 .add-btn:hover {
@@ -322,7 +328,7 @@ p {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: rgb(75, 75, 75);
+  color: #1a73e8;
   font-weight: 500;
   border: none;
   background-color: #f5f7fa;
@@ -331,7 +337,8 @@ p {
 }
 
 .back-button:hover {
-  color: rgb(0, 0, 0);
+  color: #004aac;
+  transition: 0.3s ease-in-out;
 }
 
 .wallet-detail-actions {

@@ -9,7 +9,7 @@
   color: #333;
   border-right: 1px solid #e0e0e0;
   z-index: 100;
-  padding: 20px 0;
+  padding: 20px 0px 0px 0px;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
 }
 
@@ -40,11 +40,11 @@
 
 .nav-item:hover {
   background-color: #f5f5f5;
+  background-color: #f0f7ff;
+  color: #1a73e8;
 }
 
 .nav-item.active {
-  background-color: #f0f7ff;
-  color: #1a73e8;
   font-weight: 500;
 }
 
@@ -63,15 +63,17 @@
 
 /* Sidebar Footer */
 .sidebar-footer {
-  padding: 15px;
   border-top: 1px solid #e0e0e0;
   margin-top: auto;
+  padding-top: 20px;
 }
 
 .user-profile {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-bottom: 20px;
+  padding-left: 5%;
 }
 
 .profile-icon {
@@ -104,20 +106,22 @@
 
 .logout-btn {
   background: none;
+  width: 100%;
   border: none;
-  color: #ccc;
+  color: white;
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding-top: 1rem;
+  padding: 1rem 1rem 1rem 4rem;
   font-size: 0.9rem;
+  background-color: #1a73e8;
 }
 
 .logout-btn:hover {
-  color: red;
+  background-color: #0050b8;
+  transition: 0.3s ease-in-out;
 }
 
 .logout-btn svg {
   margin-right: 0.5rem;
 }
-

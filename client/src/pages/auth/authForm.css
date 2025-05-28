@@ -2,7 +2,6 @@
 
 /* Main container styles */
 .auth-container {
-  background: #f4f4f4;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -73,7 +72,7 @@
 /* Typography styles */
 .auth-container h1 {
   font-weight: bold;
-  margin: 0;
+  margin: 15px;
   font-size: 2rem;
   text-align: center;
 }
@@ -94,14 +93,14 @@
   margin-bottom: 10px;
 }
 .form-container a:active {
-  color: #7e1010;
+  color: #1a73e8;
 }
 
 /* Button styles */
 .auth-container button {
   border-radius: 20px;
-  border: 1px solid #ff4b2b;
-  background-color: #ff4b2b;
+  border: 1px solid #1a73e8;
+  background-color: #1a73e8;
   color: #ffffff;
   font-size: 18px;
   font-weight: bold;
@@ -112,6 +111,13 @@
   cursor: pointer;
   margin-top: 20px;
   box-shadow: 0px 6px 6px rgba(0, 0, 0, 0.2);
+}
+
+.auth-container button:hover {
+  background-color: #0050b8;
+  transform: scale(0.94);
+  border: 1px solid #0050b8;
+  transition: all 0.3s ease-in-out;
 }
 
 .auth-container button:active {
@@ -288,7 +294,7 @@
 }
 
 .auth-container .sign-up-container button {
-  background-color: #ff4b2b;
+  background-color: #1a73e8;
   color: white;
 }
 
@@ -296,4 +302,42 @@
 .auth-container .sign-up-container button:hover {
   background-color: #454648;
   border-color: #c0c6d3;
+}
+
+.simple-auth-box {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.register-link {
+  display: block;
+  margin-top: 30px;
+  text-align: center;
+  color: #0c224f;
+  font-size: 17px;
+  padding: 20px;
+}
+
+.register-link span {
+  margin-top: 10px;
+}
+
+.register-link span:hover {
+  color: #00b10f;
+  text-decoration: underline;
+}
+
+.simple-auth-box input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 6px;
+  background-color: #eee;
+  font-size: 16px;
 }
