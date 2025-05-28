@@ -241,18 +241,6 @@ export default function Wallet() {
     }
   };
 
-  const handleAddTransaction = () => {
-    setIsEditingTransaction(false);
-    setCurrentTransaction({
-      amount: 0,
-      description: "",
-      date: new Date().toISOString().split("T")[0],
-      category: "",
-      type: "expense",
-    });
-    setShowTransactionModal(true);
-  };
-
   const handleEditTransaction = (transaction: Transaction) => {
     setIsEditingTransaction(true);
     setCurrentTransaction({
@@ -508,50 +496,13 @@ export default function Wallet() {
               ))}
           </div>
 
-          {/* Pie Chart Section */}
-          <div className="chart-section">
-            <h2>Balance Distribution</h2>
-            <div className="pie-chart-container">
-              <PieChart width={400} height={300}>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => [
-                    `${(Number(value) * conversionRate).toFixed(
-                      2
-                    )} ${currency}`,
-                    "Balance",
-                  ]}
-                />
-                <Legend />
-              </PieChart>
-            </div>
-          </div>
-
-          {/* Transfer Funds Button */}
+          {/* Transfer Funds Button
           <button
             className="add-btn transfer-btn"
             onClick={() => setShowTransferModal(true)}
           >
             Transfer Funds
-          </button>
+          </button> */}
         </>
       ) : (
         <>
@@ -563,16 +514,16 @@ export default function Wallet() {
             <h1>{currentWallet.name}</h1>
             <div className="wallet-detail-actions">
               <button
-                className="edit-btn"
+                className="edit-details-btn"
                 onClick={() => handleEditWallet(currentWallet)}
               >
-                <FiEdit /> Edit Wallet
+                <FiEdit />
               </button>
               <button
-                className="delete-btn"
+                className="delete-details-btn"
                 onClick={() => handleDeleteWallet(currentWallet.id)}
               >
-                <FiTrash2 /> Delete Wallet
+                <FiTrash2 />
               </button>
             </div>
           </div>
@@ -660,9 +611,6 @@ export default function Wallet() {
             <div className="transactions-section">
               <div className="section-header">
                 <h2>Transactions</h2>
-                <button className="add-btn" onClick={handleAddTransaction}>
-                  <FiPlus /> Add Transaction
-                </button>
               </div>
 
               <div className="transactions-list">
