@@ -56,14 +56,15 @@ function MainLayout() {
               </PrivateRoute>
             }
           />
-          <Route
+          {/* <Route
             path="/categories"
             element={
               <PrivateRoute>
                 <Categories />
               </PrivateRoute>
             }
-          />
+          /> */}
+          
           <Route
             path="/goals"
             element={
