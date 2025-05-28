@@ -1,0 +1,136 @@
+.goals-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px;
+  color: #e0e0e0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.goals-page h2 {
+  font-size: 1.8rem;
+  margin-bottom: 24px;
+  color: #4ade80;
+}
+
+.goal-form {
+  background-color: #2b2b40;
+  border-radius: 12px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.goal-form input,
+.goal-form select {
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #1e1e2f;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  font-size: 0.95rem;
+}
+
+.goal-form button {
+  grid-column: span 2;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.goal-form button:hover {
+  background-color: #2563eb;
+}
+
+.goal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 18px;
+}
+
+.goal-item {
+  background-color: #252539;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  position: relative;
+}
+
+.goal-item strong {
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.goal-item span {
+  color: #a0a0b0;
+}
+
+.goal-item small {
+  display: block;
+  color: #aaa;
+  margin-top: 6px;
+}
+
+.goal-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.goal-actions button {
+  background-color: transparent;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.goal-actions button:hover {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.goal-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.goal-tabs button {
+  padding: 10px 16px;
+  background: #1e1e2f;
+  color: #ccc;
+  border: 1px solid #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.goal-tabs button:hover {
+  background: #2b2b40;
+}
+
+.goal-tabs .active-tab {
+  background: #4ade80;
+  color: #000;
+  font-weight: bold;
+  border-color: transparent;
+}
