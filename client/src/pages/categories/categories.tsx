@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../../api/api'; // ensures credentials & baseURL are applied
-
-// import './categories.css';
+import api from '../../api/api';
 
 interface Category {
   id: number;
@@ -13,6 +11,9 @@ const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState('');
   const [type, setType] = useState('expense');
+
+  // Lista zaštićenih kategorija koje ne želimo brisati
+  const protectedCategories = ['Food', 'Transport', 'Groceries', 'Internal Withdrawal', 'Internal Deposit', 'Salary', 'Freelance'];
 
   const fetchCategories = async () => {
     try {
@@ -27,19 +28,24 @@ const Categories = () => {
     try {
       await api.post('/category', { name, type });
       setName('');
-      fetchCategories(); // Refresh after creation
+      fetchCategories();
     } catch (error) {
       console.error('Error creating category', error);
     }
   };
 
-   const deleteCategory = async (id: number) => {
+  const deleteCategory = async (id: number) => {
     try {
       await api.delete(`/category/${id}`);
       fetchCategories();
     } catch (error) {
       console.error('Error deleting category', error);
     }
+  };
+
+  // Provjera da li je kategorija zaštićena
+  const isProtectedCategory = (categoryName: string) => {
+    return protectedCategories.includes(categoryName);
   };
 
   useEffect(() => {
@@ -75,12 +81,14 @@ const Categories = () => {
           <li key={cat.id} className="category-item">
             <span className="cat-name">{cat.name}</span>
             <span className={`cat-type ${cat.type}`}>{cat.type}</span>
-            <button
-              className="delete-btn"
-              onClick={() => deleteCategory(cat.id)}
-            >
-              Delete
-            </button>
+            {!isProtectedCategory(cat.name) && (
+              <button
+                className="delete-btn"
+                onClick={() => deleteCategory(cat.id)}
+              >
+                Delete
+              </button>
+            )}
           </li>
         ))}
       </ul>

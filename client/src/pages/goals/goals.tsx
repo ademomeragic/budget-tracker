@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/api";
 
-// import "./goals.css";
-
 interface Goal {
   id: number;
   name: string;
@@ -15,16 +13,6 @@ interface Goal {
   endDate: string;
   type: string;
   walletName?: string;
-}
-
-interface GoalPreview {
-  name: string;
-  categoryName: string;
-  walletName: string;
-  targetAmount: number;
-  startDate: string;
-  endDate: string;
-  type: string;
 }
 
 interface Category {
@@ -43,7 +31,8 @@ export default function Goals() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [goalType, setGoalType] = useState<"expense" | "income">("expense");
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [previewGoal, setPreviewGoal] = useState<Partial<Goal> | null>(null); 
+  const [previewGoal, setPreviewGoal] = useState<Partial<Goal> | null>(null);
+  const [highlightedGoalId, setHighlightedGoalId] = useState<number | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -61,7 +50,7 @@ export default function Goals() {
 
   useEffect(() => {
     fetchCategories(goalType);
-    resetForm(); // reset form when switching tabs
+    resetForm();
   }, [goalType]);
 
   useEffect(() => {
@@ -85,49 +74,67 @@ export default function Goals() {
   }, [form, categories, wallets, goalType]);
 
   const fetchGoals = async () => {
-    const res = await api.get("/goal");
-    setGoals(res.data);
+    try {
+      const res = await api.get("/goal");
+      setGoals(res.data);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+    }
   };
 
   const fetchCategories = async (type: string) => {
-    const res = await api.get(`/category?type=${type}`);
-    setCategories(res.data);
-    if (res.data.length > 0) {
-      setForm((prev) => ({ ...prev, categoryId: res.data[0].id }));
+    try {
+      const res = await api.get(`/category?type=${type}`);
+      setCategories(res.data);
+      if (res.data.length > 0) {
+        setForm(prev => ({ ...prev, categoryId: res.data[0].id }));
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
     }
   };
 
   const fetchWallets = async () => {
-    const res = await api.get("/wallet");
-    setWallets(res.data);
-    if (res.data.length > 0) {
-      setForm((prev) => ({ ...prev, walletId: res.data[0].id }));
+    try {
+      const res = await api.get("/wallet");
+      setWallets(res.data);
+      if (res.data.length > 0) {
+        setForm(prev => ({ ...prev, walletId: res.data[0].id }));
+      }
+    } catch (error) {
+      console.error("Error fetching wallets:", error);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const payload = {
-      name: form.name,
-      categoryId: form.categoryId,
-      walletId: form.walletId,
-      targetAmount: parseFloat(form.targetAmount),
-      startDate: form.startDate,
-      endDate: form.endDate,
-      type: goalType
-    };
-
+  const handleSave = async () => {
     try {
+      const payload = {
+        name: form.name,
+        categoryId: form.categoryId,
+        walletId: form.walletId,
+        targetAmount: parseFloat(form.targetAmount),
+        startDate: form.startDate,
+        endDate: form.endDate,
+        type: goalType
+      };
+
+      let newGoalId: number | null = null;
+
       if (editingId) {
         await api.put(`/goal/${editingId}`, payload);
       } else {
-        await api.post("/goal", payload);
+        const res = await api.post("/goal", payload);
+        newGoalId = res.data?.id; // Pretpostavka: API vraća ID novog cilja
       }
-      
-      // Refresh the goals list
-      await fetchGoals();
+
       resetForm();
+      await fetchGoals();
+
+      // Istakni novi cilj
+      if (newGoalId) {
+        setHighlightedGoalId(newGoalId);
+        setTimeout(() => setHighlightedGoalId(null), 2000);
+      }
     } catch (error) {
       console.error("Error saving goal:", error);
     }
@@ -145,29 +152,6 @@ export default function Goals() {
     setEditingId(null);
   };
 
-  
-
-  const handleSave = async () => {
-    const payload = {
-      name: form.name,
-      categoryId: form.categoryId,
-      walletId: form.walletId,
-      targetAmount: parseFloat(form.targetAmount),
-      startDate: form.startDate,
-      endDate: form.endDate,
-      type: goalType
-    };
-
-    if (editingId) {
-      await api.put(`/goal/${editingId}`, payload);
-    } else {
-      await api.post("/goal", payload);
-    }
-
-    resetForm();
-    fetchGoals();
-  };
-
   const handleEdit = (goal: Goal) => {
     setGoalType(goal.type as "expense" | "income");
     setForm({
@@ -182,8 +166,12 @@ export default function Goals() {
   };
 
   const handleDelete = async (id: number) => {
-    await api.delete(`/goal/${id}`);
-    fetchGoals();
+    try {
+      await api.delete(`/goal/${id}`);
+      await fetchGoals();
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+    }
   };
 
   const filteredGoals = goals.filter(goal => goal.type === goalType);
@@ -213,74 +201,96 @@ export default function Goals() {
           placeholder="Goal name"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
+          required
         />
+        
         <select
           value={form.categoryId}
           onChange={(e) => setForm({ ...form, categoryId: parseInt(e.target.value) })}
+          required
         >
           {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
           ))}
         </select>
+        
         <select
           value={form.walletId}
           onChange={(e) => setForm({ ...form, walletId: parseInt(e.target.value) })}
+          required
         >
           {wallets.map((wallet) => (
-            <option key={wallet.id} value={wallet.id}>{wallet.name}</option>
+            <option key={wallet.id} value={wallet.id}>
+              {wallet.name}
+            </option>
           ))}
         </select>
+        
         <input
           type="number"
           placeholder="Target amount"
           value={form.targetAmount}
           onChange={(e) => setForm({ ...form, targetAmount: e.target.value })}
+          min="0"
+          step="0.01"
+          required
         />
+        
         <input
           type="date"
           value={form.startDate}
           onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+          required
         />
+        
         <input
           type="date"
           value={form.endDate}
           onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+          required
         />
-        <button onClick={handleSave}>{editingId ? "Update" : "Add Goal"}</button>
+        
+        <button onClick={handleSave}>
+          {editingId ? "Update Goal" : "Add Goal"}
+        </button>
       </div>
 
       <ul className="goal-list">
         {filteredGoals.map((goal) => (
-          <li key={goal.id} className="goal-item">
-            <strong>{goal.name}</strong> — {goal.currentAmount.toFixed(2)} / {goal.targetAmount.toFixed(2)} KM
-            <span> (Category: {goal.categoryName})</span>
-            <br />
-            <small>
-              {goal.startDate ? goal.startDate.split("T")[0] : "?"} → {goal.endDate ? goal.endDate.split("T")[0] : "?"}
-            </small>
+          <li
+            key={goal.id}
+            className={`goal-item ${goal.id === highlightedGoalId ? "highlighted" : ""}`}
+          >
+            <div className="goal-info">
+              <div><strong>{goal.name}</strong></div>
+              <div>{goal.currentAmount.toFixed(2)} / {goal.targetAmount.toFixed(2)} KM</div>
+              <div>Category: {goal.categoryName}</div>
+              <div>Wallet: {goal.walletName}</div>
+              <div>From: {goal.startDate.split("T")[0]} → {goal.endDate.split("T")[0]}</div>
+            </div>
+
+            
             <div className="goal-actions">
               <button onClick={() => handleEdit(goal)}>Edit</button>
               <button onClick={() => handleDelete(goal.id)}>Delete</button>
             </div>
-            
-            {/* Preview Section */}
-            {previewGoal && (
-              <div className="goal-preview">
-                <h3>Goal Preview</h3>
-                <div className="preview-content">
-                  <p><strong>Name:</strong> {previewGoal.name}</p>
-                  <p><strong>Type:</strong> {goalType}</p>
-                  <p><strong>Category:</strong> {previewGoal.categoryName}</p>
-                  <p><strong>Wallet:</strong> {previewGoal.walletName}</p>
-                  <p><strong>Target Amount:</strong> {previewGoal.targetAmount} KM</p>
-                  <p><strong>Duration:</strong> {previewGoal.startDate} to {previewGoal.endDate}</p>
-                </div>
-              </div>
-            )}
           </li>
-          
         ))}
       </ul>
+
+      {previewGoal && (
+        <div className="goal-preview">
+          <h3>Preview</h3>
+          <p><strong>Name:</strong> {previewGoal.name}</p>
+          <p><strong>Type:</strong> {previewGoal.type}</p>
+          <p><strong>Category:</strong> {previewGoal.categoryName}</p>
+          <p><strong>Wallet:</strong> {previewGoal.walletName}</p>
+          <p><strong>Target:</strong> {previewGoal.targetAmount} KM</p>
+          <p><strong>Period:</strong> {previewGoal.startDate} to {previewGoal.endDate}</p>
+        </div>
+      )}
     </div>
   );
 }
