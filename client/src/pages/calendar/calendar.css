@@ -1,3 +1,9 @@
+/* calendar.css */
+.content-area {
+  padding: 2rem;
+  background-color: #f5f5f5;
+}
+
 .calendar-page {
   padding: 2rem;
   max-width: 900px;
@@ -5,7 +11,7 @@
   font-family: "Segoe UI", sans-serif;
 }
 
-.react-calendar {
+.financial-calendar {
   width: 100%;
   max-width: 800px;
   background: #fff;
@@ -16,14 +22,29 @@
   margin-bottom: 2rem;
 }
 
-.react-calendar__tile {
+.react-calendar__navigation__arrow {
+  font-size: 2rem;
+}
+
+.react-calendar__navigation__label {
+  padding-top: 13px;
+}
+
+.react-calendar__navigation__label__labelText {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.financial-calendar .react-calendar__tile {
   height: 100px;
   vertical-align: top;
   padding: 0.5rem;
   position: relative;
+  font-size: 20px;
 }
 
-.react-calendar__month-view__weekdays {
+.financial-calendar .react-calendar__month-view__weekdays {
   text-align: center;
   font-weight: bold;
   color: #444;
@@ -31,61 +52,69 @@
   font-size: 0.85rem;
 }
 
-.react-calendar__tile--now {
-  background: #e3f2fd !important;
-  border-radius: 8px;
+.financial-calendar .react-calendar__tile--now {
+  background: transparent !important;
 }
 
-.react-calendar__tile--active {
-  background: #1976d2 !important;
+.financial-calendar .react-calendar__tile--now abbr {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 50%;
+  background: #e2724c;
   color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+.financial-calendar .react-calendar__tile--active {
+  background: #f5f5f5 !important;
+  color: rgb(41, 40, 40);
   border-radius: 8px;
 }
 
-.react-calendar__month-view__days__day--weekend {
-  color: #888 !important; /* softer gray instead of red */
+.financial-calendar .react-calendar__month-view__days__day--weekend {
+  color: #888 !important;
 }
 
 .calendar-marker {
   margin-top: 0.4rem;
   display: flex;
-  gap: 0.3rem;
-  justify-content: center;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.marker {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.marker.income {
-  background-color: #4caf50;
-}
-
-.marker.expense {
-  background-color: #f44336;
-}
-
-.transactions-list {
+.day-details {
   margin-top: 2rem;
+  padding: 1.5rem;
   background: #fafafa;
   border: 1px solid #e0e0e0;
-  padding: 1.5rem;
   border-radius: 10px;
+  width: 800px;
 }
 
-.transactions-list h2 {
+.transactions-section, 
+.goals-section {
+  margin-bottom: 1.5rem;
+}
+
+.transactions-section h3,
+.goals-section h3 {
   margin-bottom: 1rem;
   font-size: 1.25rem;
+  color: #444;
 }
 
 .txn-item {
   display: flex;
   justify-content: space-between;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-left: 4px solid #157d09;
+  font-size: 20px;
+  padding: 10px;
+  background-color: rgb(243, 242, 242);
+  color: #157d09;
 }
 
 .txn-item:last-child {
@@ -101,52 +130,115 @@
 }
 
 .daily-total {
-  font-size: 0.7rem;
-  line-height: 1;
-  text-align: right;
+  font-size: 0.7em;
+  line-height: 1.2;
+  text-align: center;
+  padding: 0.1rem;
+  border-radius: 3px;
 }
 
-.income {
-  color: green;
+.daily-total.income {
+  color: #388e3c;
+  background-color: #e6f7ee;
 }
 
-.expense {
-  color: red;
+.daily-total.expense {
+  color: #d32f2f;
+  background-color: #fde8e8;
 }
 
-.calendar-page h2, p{
-  color: #444;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
+.daily-total.goal-start {
+  color: #3e36d7;
+  background-color: #cad5f8;
+  font-size: 0.7em;
+  height: 30px;
   justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  text-align: center;
+  padding-top: 7px;
 }
 
-.modal {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 10px;
-  width: 300px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+.daily-total.goal-end {
+  color: #086326;
+  background-color: #c4e8d2;
+  font-size: 0.7em;
+  height: 30px;
+  justify-content: center;
+  text-align: center;
+  padding-top: 7px;
 }
 
-.modal input,
-.modal select {
-  width: 100%;
-  margin-bottom: 0.8rem;
-  padding: 0.5rem;
-}
-
-.modal-buttons {
+.goal-item {
+  padding: 0.8rem;
+  margin: 0.3rem 0;
+  border-radius: 6px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.goal-item.income {
+  background-color: #e6f7ee;
+  border-left: 4px solid #388e3c;
+}
+
+.goal-item.expense {
+  background-color: #fde8e8;
+  border-left: 4px solid #d32f2f;
+}
+
+.goal-item div:first-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.goal-item strong {
+  margin-bottom: 0.3rem;
+}
+
+.calendar-page h1 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-page h2 {
+  color: #444;
+  margin-bottom: 1rem;
+}
+
+.marker {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.3rem;
+}
+
+.marker.income {
+  background-color: #4caf50;
+}
+
+.marker.expense {
+  background-color: #f44336;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-page {
+    padding: 1rem;
+  }
+  
+  .financial-calendar .react-calendar__tile {
+    height: 80px;
+    padding: 0.3rem;
+    font-size: 0.8rem;
+  }
+  
+  .daily-total {
+    font-size: 0.6rem;
+  }
+  
+  .day-details {
+    width: 100%;
+  }
 }
