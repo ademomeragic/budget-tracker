@@ -14,24 +14,19 @@ namespace BudgetTracker.Api.Controllers
     {
         private readonly ITransactionService _service;
         private readonly IExchangeRateService _exchangeRateService;
-        private readonly ILogger<TransactionController> _logger;
 
         public TransactionController(
             ITransactionService service,
-            IExchangeRateService exchangeRateService,
-            ILogger<TransactionController> logger)
+            IExchangeRateService exchangeRateService)
         {
             _service = service;
             _exchangeRateService = exchangeRateService;
-            _logger = logger;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<object>>> GetTransactions([FromQuery] int month, [FromQuery] int year, [FromQuery] string? currency = null)
         {
             var userId = User.GetUserId();
-            _logger.LogInformation($"Fetching transactions for userId: {userId}, Month: {month}, Year: {year}");
-
             var transactions = await _service.GetUserTransactionsAsync(userId, month, year);
             return await ConvertIfRequested(transactions, currency);
         }
@@ -40,8 +35,6 @@ namespace BudgetTracker.Api.Controllers
         public async Task<ActionResult<List<object>>> GetWalletTransactions(int walletId, [FromQuery] string? currency = null)
         {
             var userId = User.GetUserId();
-            _logger.LogInformation($"Fetching transactions for walletId: {walletId}, userId: {userId}");
-
             var transactions = await _service.GetWalletTransactionsAsync(walletId, userId);
             return await ConvertIfRequested(transactions, currency);
         }
@@ -50,8 +43,6 @@ namespace BudgetTracker.Api.Controllers
         public async Task<ActionResult<List<object>>> GetAllUserTransactions([FromQuery] string? currency = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            _logger.LogInformation($"Fetching all transactions for userId: {userId}");
-
             var transactions = await _service.GetAllUserTransactionsAsync(userId);
             return await ConvertIfRequested(transactions, currency);
         }
@@ -60,8 +51,6 @@ namespace BudgetTracker.Api.Controllers
         public async Task<IActionResult> CreateTransaction([FromBody] TransactionDto dto)
         {
             var userId = User.GetUserId();
-            _logger.LogInformation($"Creating transaction for userId: {userId}, Amount: {dto.Amount}, Description: {dto.Description}");
-
             var result = await _service.CreateTransactionAsync(userId, dto);
             return Ok(result);
         }
@@ -70,8 +59,6 @@ namespace BudgetTracker.Api.Controllers
         public async Task<IActionResult> UpdateTransaction(int id, [FromBody] TransactionDto dto)
         {
             var userId = User.GetUserId();
-            _logger.LogInformation($"Updating transaction with id: {id} for userId: {userId}");
-
             var result = await _service.UpdateTransactionAsync(id, userId, dto);
             return Ok(result);
         }
@@ -80,12 +67,8 @@ namespace BudgetTracker.Api.Controllers
         public async Task<IActionResult> DeleteTransaction(int id)
         {
             var userId = User.GetUserId();
-            _logger.LogInformation($"Deleting transaction with id: {id} for userId: {userId}");
-
             var success = await _service.DeleteTransactionAsync(id, userId);
             if (!success) return NotFound();
-
-            _logger.LogInformation($"Transaction with id: {id} successfully deleted for userId: {userId}");
             return NoContent();
         }
 
@@ -100,7 +83,6 @@ namespace BudgetTracker.Api.Controllers
             try
             {
                 var rate = await _exchangeRateService.GetExchangeRateAsync(currency.ToUpper());
-                _logger.LogInformation($"Currency conversion rate fetched for {currency.ToUpper()}: {rate}");
 
                 return transactions.Select(t => new
                 {
@@ -112,13 +94,14 @@ namespace BudgetTracker.Api.Controllers
                     t.Date,
                     t.CategoryId,
                     t.WalletId
-                }).Cast<object>().ToList();
+                }).Cast<object>().ToList(); // ✅ Must return a List<object>
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Currency conversion failed: {ex.Message}");
-                return transactions.Cast<object>().ToList();
+                Console.WriteLine($"⚠️ Currency conversion failed: {ex.Message}");
+                return transactions.Cast<object>().ToList(); // ✅ No Ok() here
             }
         }
+
     }
 }
