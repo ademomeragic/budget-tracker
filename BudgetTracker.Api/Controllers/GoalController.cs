@@ -13,20 +13,27 @@ namespace BudgetTracker.Api.Controllers
     {
         private readonly IGoalService _service;
         private readonly IExchangeRateService _exchangeRateService;
+        private readonly ILogger<GoalController> _logger;
 
-        public GoalController(IGoalService service, IExchangeRateService exchangeRateService)
+        public GoalController(
+            IGoalService service,
+            IExchangeRateService exchangeRateService,
+            ILogger<GoalController> logger)
         {
             _service = service;
             _exchangeRateService = exchangeRateService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetGoals([FromQuery] string? currency = null)
         {
             var userId = User.GetUserId();
-            var goals = await _service.GetUserGoalsAsync(userId);
+            _logger.LogInformation("Fetching goals for user {UserId}", userId);
 
+            var goals = await _service.GetUserGoalsAsync(userId);
             var response = await ConvertIfRequested(goals, currency);
+
             return Ok(response);
         }
 
@@ -34,6 +41,8 @@ namespace BudgetTracker.Api.Controllers
         public async Task<IActionResult> CreateGoal([FromBody] GoalCreateDto dto)
         {
             var userId = User.GetUserId();
+            _logger.LogInformation("Creating goal for user {UserId}: {@Dto}", userId, dto);
+
             var created = await _service.CreateGoalAsync(userId, dto);
             return Ok(created);
         }
@@ -42,6 +51,8 @@ namespace BudgetTracker.Api.Controllers
         public async Task<IActionResult> UpdateGoal(int id, [FromBody] GoalUpdateDto dto)
         {
             var userId = User.GetUserId();
+            _logger.LogInformation("Updating goal {GoalId} for user {UserId}", id, userId);
+
             var updated = await _service.UpdateGoalAsync(id, userId, dto);
             return Ok(updated);
         }
@@ -50,22 +61,28 @@ namespace BudgetTracker.Api.Controllers
         public async Task<IActionResult> DeleteGoal(int id)
         {
             var userId = User.GetUserId();
+            _logger.LogInformation("Deleting goal {GoalId} for user {UserId}", id, userId);
+
             var result = await _service.DeleteGoalAsync(id, userId);
-            if (!result) return NotFound();
+            if (!result)
+            {
+                _logger.LogWarning("⚠️ Goal {GoalId} not found for user {UserId}", id, userId);
+                return NotFound();
+            }
+
             return NoContent();
         }
 
-        // Currency conversion
         private async Task<object> ConvertIfRequested(IEnumerable<GoalDto> goals, string? currency)
         {
             if (string.IsNullOrWhiteSpace(currency) || currency.ToUpper() == "BAM")
-            {
                 return goals;
-            }
 
             try
             {
                 var rate = await _exchangeRateService.GetExchangeRateAsync(currency.ToUpper());
+
+                _logger.LogInformation("💱 Converting goals to {Currency} at rate {Rate}", currency.ToUpper(), rate);
 
                 return goals.Select(g => new
                 {
@@ -86,6 +103,7 @@ namespace BudgetTracker.Api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while converting goals to {Currency}", currency);
                 return new { error = $"Conversion failed: {ex.Message}" };
             }
         }

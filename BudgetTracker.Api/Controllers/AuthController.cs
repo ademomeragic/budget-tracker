@@ -17,37 +17,62 @@ namespace BudgetTracker.Api.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(UserManager<ApplicationUser> userManager,
                               IConfiguration configuration,
-                              SignInManager<ApplicationUser> signInManager)
+                              SignInManager<ApplicationUser> signInManager,
+                              ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _configuration = configuration;
             _signInManager = signInManager;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterUserDto dto)
         {
+            _logger.LogInformation("User registration: {Username}", dto.Username);
+
             var user = new ApplicationUser { UserName = dto.Username };
             var result = await _userManager.CreateAsync(user, dto.Password);
 
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            {
+                _logger.LogWarning("Registration failed {Username}: {Errors}",
+                    dto.Username,
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
 
+                return BadRequest(result.Errors);
+            }
+
+            _logger.LogInformation("User {Username} registered successfully", dto.Username);
             return Ok("User created successfully");
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginDto dto)
         {
+            _logger.LogInformation("User login attempt: {Username}", dto.Username);
+
             var user = await _userManager.FindByNameAsync(dto.Username);
-            if (user == null) return Unauthorized("Invalid username or password");
+            if (user == null)
+            {
+                _logger.LogWarning("Login failed: user {Username} does not exist", dto.Username);
+                return Unauthorized("Invalid username or password");
+            }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
-            if (!result.Succeeded) return Unauthorized("Invalid username or password");
+            if (!result.Succeeded)
+            {
+                _logger.LogWarning("Login failed: invalid password for user {Username}", dto.Username);
+                return Unauthorized("Invalid username or password");
+            }
+
+            _logger.LogInformation("User {Username} logged in successfully", dto.Username);
 
             var token = GenerateJwtToken(user);
             return Ok(new { token });
