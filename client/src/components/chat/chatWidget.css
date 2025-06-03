@@ -28,6 +28,11 @@
   background-color: #0056b3;
 }
 
+.chat-message {
+  white-space: pre-line; /* omogući prikaz \n kao novi red */
+  margin-bottom: 0.5rem;
+}
+
 /* Chat box */
 .chat-container {
   position: fixed;
