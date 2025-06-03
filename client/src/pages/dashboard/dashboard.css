@@ -281,11 +281,15 @@
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 2px;
+  margin-left: 10px;
 }
 
-.transaction-category {
-  font-size: 12px;
-  color: #64748b;
+.transaction-details span{
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    color: var(--gray);
 }
 
 .transaction-date {
@@ -568,7 +572,7 @@
 }
 
 .transaction-form button {
-  background-color: #4caf50;
+  background-color: #1a73e8;
   color: white;
   border: none;
   padding: 12px;
@@ -580,7 +584,7 @@
 }
 
 .transaction-form button:hover {
-  background-color: #45a049;
+  background-color: #0053be;
 }
 
 .date-error {

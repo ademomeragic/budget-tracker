@@ -589,21 +589,6 @@ export default function Wallet() {
                   </p>
                 </div>
               </div>
-              <div className="stat-card growth">
-                <MdSavings className="stat-icon" />
-                <div>
-                  <h4>Growth</h4>
-                  <p
-                    className={
-                      getWalletStats(currentWallet).growth >= 0
-                        ? "positive"
-                        : "negative"
-                    }
-                  >
-                    {getWalletStats(currentWallet).growth.toFixed(2)}%
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
 

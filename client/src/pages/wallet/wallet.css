@@ -619,21 +619,35 @@ p {
 }
 
 .cancel-btn {
-  background-color: var(--light-gray);
-  color: var(--dark);
+    background-color: #e81a1a;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 20px 0;
+    transition: background-color 0.3s;
 }
 
 .cancel-btn:hover {
-  background-color: #dee2e6;
+  background-color: #910101;
 }
 
 .confirm-btn {
-  background-color: var(--primary);
-  color: white;
+      background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 20px 0;
+    transition: background-color 0.3s;
 }
 
 .confirm-btn:hover {
-  background-color: var(--primary-light);
+  background-color: #0045a0;
 }
 
 /* Type Toggle */

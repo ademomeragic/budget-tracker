@@ -7,10 +7,6 @@ import {
   FiTarget,
   FiCreditCard,
   FiX,
-  FiType,
-  FiCalendar,
-  FiTag,
-  FiInfo,
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
@@ -28,14 +24,22 @@ import {
 import "./dashboard.css";
 import api from "../../api/api";
 
-// Types
 type TransactionType = "income" | "expense";
 type TimeRange = "week" | "month" | "year";
+
+interface TransactionRaw {
+  id: number;
+  amount: number;
+  date: string;
+  description: string;
+  type: TransactionType;
+  categoryId: number;
+}
 
 interface Transaction {
   id: number;
   amount: number;
-  date: string | Date;
+  date: Date;
   description: string;
   type: TransactionType;
   category: string;
@@ -68,14 +72,7 @@ interface Goal {
   color: string;
 }
 
-const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884D8",
-  "#82CA9D",
-];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"];
 
 const initialData: Record<string, MonthData> = {
   "MAR 25": {
@@ -113,42 +110,69 @@ const initialData: Record<string, MonthData> = {
 const monthNames = Object.keys(initialData);
 
 export default function Dashboard() {
-  // Original transaction state and handlers
   const [activeMonthIndex, setActiveMonthIndex] = useState(2);
   const [monthlyData, setMonthlyData] = useState(initialData);
+  const [expensesForChart, setExpensesForChart] = useState<Transaction[]>([]);
   const [newTransaction, setNewTransaction] = useState({
     amount: "",
     date: "",
     description: "",
-    type: "income" as "income" | "expense",
+    type: "income" as TransactionType,
   });
   const [showForm, setShowForm] = useState(false);
   const [dateError, setDateError] = useState("");
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<Category[]>([]);
+  const [incomeCategories, setIncomeCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(1);
   const [selectedWalletId, setSelectedWalletId] = useState<number>(1);
-
-  // New dashboard state
-  const [timeRange, setTimeRange] = useState<TimeRange>("month");
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
   const activeMonth = monthNames[activeMonthIndex];
   const currentMonthData = monthlyData[activeMonth];
   const monthName = activeMonth.split(" ")[0];
   const year = currentMonthData.year;
 
-  // Original transaction functions
+  const fetchCategories = async () => {
+    try {
+      const [expenseRes, incomeRes] = await Promise.all([
+        api.get(`/Category?type=expense`),
+        api.get(`/Category?type=income`)
+      ]);
+      setExpenseCategories(expenseRes.data);
+      setIncomeCategories(incomeRes.data);
+      if (expenseRes.data.length > 0) setSelectedCategoryId(expenseRes.data[0].id);
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  };
+
+  const fetchWallets = async () => {
+    try {
+      const res = await api.get("/wallet");
+      setWallets(res.data);
+      if (res.data.length > 0) setSelectedWalletId(res.data[0].id);
+    } catch (err) {
+      console.error("Failed to fetch wallets", err);
+    }
+  };
+
   const fetchTransactions = async () => {
     const { month, year } = currentMonthData;
     try {
-      const res = await api.get(`/transaction?month=${month}&year=${year}`);
-      const parsed = res.data.map((txn: any) => ({
-        ...txn,
-        date: new Date(txn.date),
-      }));
-      setMonthlyData((prev) => ({
+      const res = await api.get<TransactionRaw[]>(`/Transaction?month=${month}&year=${year}`);
+      
+      const parsed = res.data.map((txn) => {
+        const categories = txn.type === "expense" ? expenseCategories : incomeCategories;
+        const categoryName = categories.find(c => c.id === txn.categoryId)?.name || "Uncategorized";
+        return {
+          ...txn,
+          date: new Date(txn.date),
+          category: categoryName,
+        };
+      });
+
+      setMonthlyData(prev => ({
         ...prev,
         [activeMonth]: {
           ...prev[activeMonth],
@@ -156,91 +180,51 @@ export default function Dashboard() {
         },
       }));
     } catch (err) {
-      console.error("❌ Failed to fetch transactions", err);
+      console.error("Failed to fetch transactions", err);
+    }
+  };
+
+  const fetchExpensesForChart = async () => {
+    const { month, year } = currentMonthData;
+    try {
+      const res = await api.get<TransactionRaw[]>(
+        `/Transaction?month=${month}&year=${year}&type=expense`
+      );
+      
+      const parsed = res.data.map((txn) => {
+        const categoryName = expenseCategories.find(c => c.id === txn.categoryId)?.name || "Uncategorized";
+        return {
+          ...txn,
+          date: new Date(txn.date),
+          category: categoryName,
+        };
+      });
+
+      setExpensesForChart(parsed);
+    } catch (err) {
+      console.error("Failed to fetch expenses for chart", err);
     }
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, [activeMonthIndex]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await api.get(`/category?type=${newTransaction.type}`);
-        setCategories(res.data);
-        if (res.data.length > 0) setSelectedCategoryId(res.data[0].id);
-      } catch (err) {
-        console.error("❌ Failed to fetch categories", err);
-      }
+    const loadData = async () => {
+      await fetchCategories();
+      await fetchWallets();
+      await fetchTransactions();
+      await fetchExpensesForChart();
     };
-    fetchCategories();
-  }, [newTransaction.type]);
-
-  useEffect(() => {
-    const fetchWallets = async () => {
-      try {
-        const res = await api.get("/wallet");
-        setWallets(res.data);
-        if (res.data.length > 0) setSelectedWalletId(res.data[0].id);
-      } catch (err) {
-        console.error("❌ Failed to fetch wallets", err);
-      }
-    };
-    fetchWallets();
+    loadData();
   }, []);
+
+  useEffect(() => {
+    if (expenseCategories.length > 0) {
+      fetchTransactions();
+      fetchExpensesForChart();
+    }
+  }, [activeMonth, expenseCategories]);
 
   const formatCurrency = (amount: number): string =>
     amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,") + " KM";
-
-  const incomeTotal = currentMonthData.transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
-  const expensesTotal = currentMonthData.transactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
-  const balanceTotal = incomeTotal - expensesTotal;
-
-  // ADD DYNAMIC WIDGET DATA CALCULATIONS HERE
-  const monthlyTrendData = Array.from({ length: 12 }, (_, monthIndex) => {
-    const monthTransactions = currentMonthData.transactions.filter((txn) => {
-      const date = new Date(txn.date);
-      return date.getMonth() === monthIndex;
-    });
-
-    const income = monthTransactions
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const expenses = monthTransactions
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-    return {
-      name: new Date(0, monthIndex).toLocaleString("default", {
-        month: "short",
-      }),
-      income,
-      expenses,
-      balance: income - expenses,
-    };
-  });
-
-  const categoryData = currentMonthData.transactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc: { [key: string]: number }, txn) => {
-      const category = txn.category || "Uncategorized";
-      acc[category] = (acc[category] || 0) + Math.abs(txn.amount);
-      return acc;
-    }, {});
-
-  const pieChartData = Object.entries(categoryData)
-    .map(([name, amount]) => ({ name, amount }))
-    .sort((a, b) => b.amount - a.amount);
-
-  const recentTransactions = [...currentMonthData.transactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
 
   const validateDate = (dateString: string): boolean => {
     const selectedDate = new Date(dateString);
@@ -268,8 +252,9 @@ export default function Dashboard() {
       };
       await api.post("/transaction", payload);
       await fetchTransactions();
+      await fetchExpensesForChart();
     } catch (err) {
-      console.error("❌ Failed to add transaction", err);
+      console.error("Failed to add transaction", err);
     }
     setNewTransaction({
       amount: "",
@@ -280,30 +265,12 @@ export default function Dashboard() {
     setShowForm(false);
   };
 
-  const getTransactionsForWeek = (week: string) => {
-    const [start, end] = week
-      .split("-")
-      .map((s) => parseInt(s.replace(/\D/g, "")));
-    return currentMonthData.transactions.filter((txn) => {
-      const day = new Date(txn.date).getDate();
-      return day >= start && day <= end;
-    });
-  };
-
   const handleMonthChange = (direction: "prev" | "next") => {
     setActiveMonthIndex((prev) => {
       if (direction === "prev" && prev > 0) return prev - 1;
       if (direction === "next" && prev < monthNames.length - 1) return prev + 1;
       return prev;
     });
-    setNewTransaction({
-      amount: "",
-      date: "",
-      description: "",
-      type: "income",
-    });
-    setShowForm(false);
-    setDateError("");
   };
 
   const { min, max } = (() => {
@@ -317,34 +284,72 @@ export default function Dashboard() {
     };
   })();
 
-  // New dashboard functions (visual only)
-  const getProgressPercentage = (goal: Goal): number => {
-    return Math.min(100, (goal.saved / goal.target) * 100);
-  };
+  const incomeTotal = currentMonthData.transactions
+    .filter(t => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const expensesTotal = currentMonthData.transactions
+    .filter(t => t.type === "expense")
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  const balanceTotal = incomeTotal - expensesTotal;
+
+  const categoryData = expensesForChart.reduce((acc: Record<string, number>, txn) => {
+    const category = txn.category;
+    acc[category] = (acc[category] || 0) + Math.abs(txn.amount);
+    return acc;
+  }, {});
+
+  const pieChartData = Object.entries(categoryData)
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const monthlyTrendData = Array.from({ length: 12 }, (_, monthIndex) => {
+    const monthTransactions = currentMonthData.transactions.filter((txn) => {
+      const date = new Date(txn.date);
+      return date.getMonth() === monthIndex;
+    });
+
+    const income = monthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const expenses = monthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    return {
+      name: new Date(0, monthIndex).toLocaleString("default", {
+        month: "short",
+      }),
+      income,
+      expenses,
+      balance: income - expenses,
+    };
+  });
+
+  const recentTransactions = [...currentMonthData.transactions]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
 
   return (
     <div className="dashboard-container">
-      {/* Month Navigation (original) */}
       <div className="month-navigation">
-        <button
-          className="nav-arrow"
+        <button className="nav-arrow"
           onClick={() => handleMonthChange("prev")}
           disabled={activeMonthIndex === 0}
         >
           <FiChevronLeft size={24} />
         </button>
-        <h2>
-          {monthName} {year}
-        </h2>
-        <button
-          className="nav-arrow"
+        <h2>{monthName} {year}</h2>
+        <button className="nav-arrow"
           onClick={() => handleMonthChange("next")}
           disabled={activeMonthIndex === monthNames.length - 1}
         >
           <FiChevronRight size={24} />
         </button>
       </div>
-      {/* Summary Cards (new dashboard style) */}
+
       <div className="summary-cards">
         <div className="summary-card balance">
           <div className="card-header">
@@ -352,14 +357,6 @@ export default function Dashboard() {
             <h3>Current Balance</h3>
           </div>
           <div className="card-value">{formatCurrency(balanceTotal)}</div>
-          <div
-            className={`card-trend ${
-              balanceTotal >= 0 ? "positive" : "negative"
-            }`}
-          >
-            {/* {balanceTotal >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
-            <span>{balanceTotal >= 0 ? "Positive" : "Negative"} cash flow</span> */}
-          </div>
         </div>
 
         <div className="summary-card income">
@@ -368,10 +365,6 @@ export default function Dashboard() {
             <h3>Income</h3>
           </div>
           <div className="card-value">{formatCurrency(incomeTotal)}</div>
-          <div className="card-trend positive">
-            {/* <FiTrendingUp />
-            <span>+5% from last month</span> */}
-          </div>
         </div>
 
         <div className="summary-card expenses">
@@ -380,34 +373,9 @@ export default function Dashboard() {
             <h3>Expenses</h3>
           </div>
           <div className="card-value">{formatCurrency(expensesTotal)}</div>
-          <div className="card-trend negative">
-            {/* <FiTrendingDown /> */}
-            {/* <span>-3% from last month</span> */}
-          </div>
         </div>
       </div>
-      {/* Time Range Selector (new) */}
-      {/* <div className="time-range-selector">
-        <button
-          className={`time-range-btn ${timeRange === "week" ? "active" : ""}`}
-          onClick={() => setTimeRange("week")}
-        >
-          Week
-        </button>
-        <button
-          className={`time-range-btn ${timeRange === "month" ? "active" : ""}`}
-          onClick={() => setTimeRange("month")}
-        >
-          Month
-        </button>
-        <button
-          className={`time-range-btn ${timeRange === "year" ? "active" : ""}`}
-          onClick={() => setTimeRange("year")}
-        >
-          Year
-        </button>
-      </div> */}
-      {/* Charts Row (new) */}
+
       <div className="charts-row">
         <div className="chart-container">
           <div className="chart-header">
@@ -443,37 +411,23 @@ export default function Dashboard() {
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="amount"
-                nameKey="name"
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
-                }
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {pieChartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value) => formatCurrency(Number(value))}
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  padding: "10px",
-                }}
-              />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
-      {/* Original Transaction Form */}
+
       <button
         className="add-transaction-btn"
         onClick={() => setShowForm(!showForm)}
       >
-        + Add Transaction
+        <FiPlus /> Add Transaction
       </button>
 
       {showForm && (
@@ -485,7 +439,7 @@ export default function Dashboard() {
                 className="close-button"
                 onClick={() => setShowForm(false)}
               >
-                ×
+                <FiX />
               </button>
             </div>
             <div className="transaction-form">
@@ -493,12 +447,18 @@ export default function Dashboard() {
                 <label>Transaction Type</label>
                 <select
                   value={newTransaction.type}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newType = e.target.value as TransactionType;
                     setNewTransaction({
                       ...newTransaction,
-                      type: e.target.value as "income" | "expense",
-                    })
-                  }
+                      type: newType,
+                    });
+                    if (newType === "expense" && expenseCategories.length > 0) {
+                      setSelectedCategoryId(expenseCategories[0].id);
+                    } else if (incomeCategories.length > 0) {
+                      setSelectedCategoryId(incomeCategories[0].id);
+                    }
+                  }}
                 >
                   <option value="income">Income</option>
                   <option value="expense">Expense</option>
@@ -557,15 +517,19 @@ export default function Dashboard() {
                 <label>Category</label>
                 <select
                   value={selectedCategoryId}
-                  onChange={(e) =>
-                    setSelectedCategoryId(parseInt(e.target.value))
-                  }
+                  onChange={(e) => setSelectedCategoryId(parseInt(e.target.value))}
                 >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
+                  {newTransaction.type === "expense"
+                    ? expenseCategories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))
+                    : incomeCategories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
                 </select>
               </div>
 
@@ -573,9 +537,7 @@ export default function Dashboard() {
                 <label>Wallet</label>
                 <select
                   value={selectedWalletId}
-                  onChange={(e) =>
-                    setSelectedWalletId(parseInt(e.target.value))
-                  }
+                  onChange={(e) => setSelectedWalletId(parseInt(e.target.value))}
                 >
                   {wallets.map((wallet) => (
                     <option key={wallet.id} value={wallet.id}>
@@ -590,7 +552,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {/* Goals and Transactions Row (new) */}
+
       <div className="bottom-row">
         <div className="goals-container">
           <div className="section-header">
