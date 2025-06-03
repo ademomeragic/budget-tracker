@@ -17,8 +17,22 @@ public class GoalNotificationService : BackgroundService
         _logger = logger;
     }
 
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("GoalNotificationService is starting.");
+        return base.StartAsync(cancellationToken);
+    }
+
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("GoalNotificationService is stopping.");
+        return base.StopAsync(cancellationToken);
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("GoalNotificationService execution started.");
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -37,5 +51,7 @@ public class GoalNotificationService : BackgroundService
 
             await Task.Delay(TimeSpan.FromHours(1), stoppingToken); // adjust interval here
         }
+
+        _logger.LogInformation("GoalNotificationService execution stopping.");
     }
 }

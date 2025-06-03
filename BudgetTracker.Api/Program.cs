@@ -11,19 +11,58 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using BudgetTracker.Domain.Interfaces;
 using BudgetTracker.Infrastructure.Repositories;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console() // Log to console
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day) // Also log to rolling file
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Use Serilog instead of default .NET logger
+builder.Host.UseSerilog();
+
 builder.Services.AddAutoMapper(typeof(TransactionMappingProfile));
 builder.Services.AddAutoMapper(typeof(CategoryMappingProfile));
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Budget Tracker API", Version = "v1" });
+
+    // JWT Auth support in Swagger UI
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT token like: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 builder.Services.AddDbContext<BudgetDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<BudgetDbContext>()
     .AddDefaultTokenProviders();
@@ -45,8 +84,6 @@ builder.Services.AddScoped<IGoalRepository, GoalRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IFloatNoteRepository, FloatNoteRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-
 
 builder.Services.AddAuthentication(options =>
 {
@@ -70,37 +107,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Budget Tracker API", Version = "v1" });
-
-    // Add JWT auth support
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter your JWT token below. Example: Bearer {your token}"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -108,15 +114,13 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // ✅ key part
+              .AllowCredentials();
     });
 });
 
-
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure middleware pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -124,21 +128,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Use Serilog's logging inside this middleware
 app.Use(async (context, next) =>
 {
-    Console.WriteLine($"[REQUEST] {context.Request.Method} {context.Request.Path}");
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("[REQUEST] {Method} {Path}", context.Request.Method, context.Request.Path);
     await next();
 });
+
 app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-/* using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
-    context.Transactions.RemoveRange(context.Transactions);
-    context.SaveChanges();
-} */
 
 app.Run();
