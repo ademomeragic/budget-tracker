@@ -3,6 +3,7 @@ import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import api from "../../api/api";
 import "./dashboard.css";
 import NotificationList from "../../components/notification/NotificationList";
+import ChatWidget from '../../components/chat/ChatWidget';
 
 const ChevronLeftIcon = FiChevronLeft as unknown as React.FC<{ size?: number }>;
 const ChevronRightIcon = FiChevronRight as unknown as React.FC<{ size?: number }>;
@@ -178,7 +179,14 @@ export default function Dashboard() {
   })();
 
   return (
+
+    
     <div className="dashboard-container">
+
+      <div>
+        <ChatWidget />
+      </div>
+      
       <div className="month-navigation">
         <button className="nav-arrow" onClick={() => handleMonthChange("prev")} disabled={activeMonthIndex === 0}>
           <ChevronLeftIcon size={24} />

@@ -8,6 +8,7 @@ import {
 } from "../../api/wallet";
 import api from "../../api/api";
 import "./wallet.css";
+import ChatWidget from "../../components/chat/ChatWidget";
 
 const TrashIcon = FiTrash2 as unknown as React.FC;
 const EditIcon = FiEdit as unknown as React.FC;
@@ -155,6 +156,9 @@ export default function Wallet() {
 
   return (
     <div className="wallet-page">
+      <div>
+        <ChatWidget />
+      </div>
       <div className="balance-section">
         <h1>Wallet Overview</h1>
 

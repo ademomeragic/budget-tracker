@@ -3,6 +3,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import api from "../../api/api";
 import "./calendar.css";
+import ChatWidget from '../../components/chat/ChatWidget';
 
 interface Transaction {
   id: string;
@@ -92,12 +93,15 @@ export default function CalendarPage() {
     const endGoals = goals.filter(g => g.endDate.split("T")[0] === key);
 
     return (
+      
       <div className="calendar-marker">
         {income > 0 && <div className="daily-total income">💰 {income.toFixed(2)}</div>}
         {expense > 0 && <div className="daily-total expense">🔻 {expense.toFixed(2)}</div>}
         {startGoals.length > 0 && <div className="daily-total goal-start">🎯 Start ({startGoals.length})</div>}
         {endGoals.length > 0 && <div className="daily-total goal-end">🏁 End ({endGoals.length})</div>}
       </div>
+
+      
     );
   };
 
@@ -107,6 +111,9 @@ export default function CalendarPage() {
 
   return (
     <div className="calendar-page">
+      <div>
+        <ChatWidget />
+      </div>
       <h1>Financial Calendar</h1>
       <Calendar 
         onClickDay={handleDayClick} 

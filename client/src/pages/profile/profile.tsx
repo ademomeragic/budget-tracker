@@ -6,6 +6,7 @@ import {
   updateNotificationPreferences,
 } from "../../api/api";
 import "./profile.css";
+import ChatWidget from "../../components/chat/ChatWidget";
 
 type NotificationPreferences = {
   deadlineWarnings: boolean;
@@ -81,6 +82,10 @@ const ProfilePage = () => {
   return (
     <div className="profile-container">
       <h2 className="profile-title">User Profile</h2>
+
+      <div>
+        <ChatWidget />
+      </div>
 
       <div className="profile-section">
         <h3>Settings</h3>

@@ -18,6 +18,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import api from "../../api/api";
 import "./reports.css";
+import ChatWidget from "../../components/chat/ChatWidget";
 
 interface Transaction {
   amount: number;
@@ -115,6 +116,9 @@ export default function Reports() {
 
   return (
     <div className="reports-container">
+      <div>
+        <ChatWidget />
+      </div>
       <div className="reports-header">
         <h1>Financial Report</h1>
         <button className="export-btn" onClick={handleExportPDF}>
