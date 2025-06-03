@@ -1,37 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using BudgetTracker.Application.Dtos;
 using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using BudgetTracker.Domain.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace BudgetTracker.Infrastructure.Services
+namespace BudgetTracker.Application.Services
 {
     public class TransactionService : ITransactionService
     {
-        private readonly BudgetDbContext _context;
+        private readonly ITransactionRepository _transactionRepository;
         private readonly IMapper _mapper;
         private readonly IGoalService _goalService;
-        private readonly ITransactionService _transactionService;
 
-        public TransactionService(BudgetDbContext context, IMapper mapper, IGoalService goalService)
+        public TransactionService(
+            ITransactionRepository transactionRepository, 
+            IMapper mapper, 
+            IGoalService goalService)
         {
-            _context = context;
+            _transactionRepository = transactionRepository;
             _mapper = mapper;
             _goalService = goalService;
         }
 
-
         public async Task<List<TransactionDto>> GetUserTransactionsAsync(string userId, int month, int year)
         {
-            var userTransactions = await _context.Transactions
-                .Include(t => t.Wallet)
-                .Where(t => t.Wallet.UserId == userId)
-                .ToListAsync();
-
+            var userTransactions = await _transactionRepository.GetTransactionsByUserAsync(userId);
             var filtered = userTransactions
                 .Where(t => t.Date.Month == month && t.Date.Year == year)
                 .OrderByDescending(t => t.Date)
@@ -42,31 +39,21 @@ namespace BudgetTracker.Infrastructure.Services
 
         public async Task<List<TransactionDto>> GetWalletTransactionsAsync(int walletId, string userId)
         {
-            var transactions = await _context.Transactions
-                .Include(t => t.Wallet)
-                .Where(t => t.Wallet.Id == walletId && t.Wallet.UserId == userId)
-                .OrderByDescending(t => t.Date)
-                .ToListAsync();
-
-            return _mapper.Map<List<TransactionDto>>(transactions);
+            var transactions = await _transactionRepository.GetTransactionsByWalletAsync(walletId, userId);
+            return _mapper.Map<List<TransactionDto>>(transactions.OrderByDescending(t => t.Date).ToList());
         }
 
         public async Task<List<TransactionDto>> GetAllUserTransactionsAsync(string userId)
         {
-            var transactions = await _context.Transactions
-                .Include(t => t.Wallet)
-                .Where(t => t.Wallet.UserId == userId)
-                .OrderByDescending(t => t.Date)
-                .ToListAsync();
-
-            return _mapper.Map<List<TransactionDto>>(transactions);
+            var transactions = await _transactionRepository.GetTransactionsByUserAsync(userId);
+            return _mapper.Map<List<TransactionDto>>(transactions.OrderByDescending(t => t.Date).ToList());
         }
 
         public async Task<TransactionDto> CreateTransactionAsync(string userId, TransactionDto dto)
         {
             var transaction = _mapper.Map<Transaction>(dto);
 
-            var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.Id == transaction.WalletId && w.UserId == userId);
+            var wallet = await _transactionRepository.GetWalletByIdAsync(transaction.WalletId, userId);
             if (wallet == null) throw new Exception("Wallet not found or unauthorized");
 
             if (transaction.Type == "income")
@@ -74,8 +61,8 @@ namespace BudgetTracker.Infrastructure.Services
             else if (transaction.Type == "expense")
                 wallet.Balance -= transaction.Amount;
 
-            _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
+            await _transactionRepository.AddTransactionAsync(transaction);
+            await _transactionRepository.UpdateWalletAsync(wallet);
 
             await _goalService.CheckGoalStatusForUser(userId);
 
@@ -84,14 +71,12 @@ namespace BudgetTracker.Infrastructure.Services
 
         public async Task<TransactionDto> UpdateTransactionAsync(int id, string userId, TransactionDto dto)
         {
-            var oldTransaction = await _context.Transactions
-                .Include(t => t.Wallet)
-                .FirstOrDefaultAsync(t => t.Id == id && t.Wallet.UserId == userId);
-
+            var oldTransaction = await _transactionRepository.GetTransactionByIdAsync(id, userId);
             if (oldTransaction == null) throw new Exception("Transaction not found");
 
-            var wallet = oldTransaction.Wallet;
+            var wallet = await _transactionRepository.GetWalletByIdAsync(oldTransaction.WalletId, userId);
 
+            // Revert old transaction effect on wallet balance
             if (oldTransaction.Type == "income")
                 wallet.Balance -= oldTransaction.Amount;
             else if (oldTransaction.Type == "expense")
@@ -99,12 +84,14 @@ namespace BudgetTracker.Infrastructure.Services
 
             _mapper.Map(dto, oldTransaction);
 
+            // Apply new transaction effect on wallet balance
             if (oldTransaction.Type == "income")
                 wallet.Balance += oldTransaction.Amount;
             else if (oldTransaction.Type == "expense")
                 wallet.Balance -= oldTransaction.Amount;
 
-            await _context.SaveChangesAsync();
+            await _transactionRepository.UpdateTransactionAsync(oldTransaction);
+            await _transactionRepository.UpdateWalletAsync(wallet);
 
             await _goalService.CheckGoalStatusForUser(userId);
 
@@ -113,21 +100,18 @@ namespace BudgetTracker.Infrastructure.Services
 
         public async Task<bool> DeleteTransactionAsync(int id, string userId)
         {
-            var transaction = await _context.Transactions
-                .Include(t => t.Wallet)
-                .FirstOrDefaultAsync(t => t.Id == id && t.Wallet.UserId == userId);
-
+            var transaction = await _transactionRepository.GetTransactionByIdAsync(id, userId);
             if (transaction == null) return false;
 
-            var wallet = transaction.Wallet;
+            var wallet = await _transactionRepository.GetWalletByIdAsync(transaction.WalletId, userId);
 
             if (transaction.Type == "income")
                 wallet.Balance -= transaction.Amount;
             else if (transaction.Type == "expense")
                 wallet.Balance += transaction.Amount;
 
-            _context.Transactions.Remove(transaction);
-            await _context.SaveChangesAsync();
+            await _transactionRepository.DeleteTransactionAsync(transaction);
+            await _transactionRepository.UpdateWalletAsync(wallet);
 
             await _goalService.CheckGoalStatusForUser(userId);
 

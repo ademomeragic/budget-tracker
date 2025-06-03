@@ -2,13 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using BudgetTracker.Application.MappingProfiles;
 using BudgetTracker.Application.Interfaces;
-using BudgetTracker.Infrastructure.Services;
+using BudgetTracker.Application.Services;
 using Microsoft.AspNetCore.Identity;
 using BudgetTracker.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using BudgetTracker.Domain.Interfaces;
+using BudgetTracker.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoMapper(typeof(TransactionMappingProfile));
@@ -36,6 +38,13 @@ builder.Services.AddScoped<IFloatNoteService, FloatNoteService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IFloatNoteRepository, FloatNoteRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 
 

@@ -2,53 +2,58 @@
 using BudgetTracker.Application.Dtos;
 using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using BudgetTracker.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BudgetTracker.Infrastructure.Services
+namespace BudgetTracker.Application.Services
 {
     public class GoalService : IGoalService
     {
-        private readonly BudgetDbContext _context;
+        private readonly IGoalRepository _goalRepository;
+        private readonly ITransactionRepository _transactionRepository;
+        private readonly ICategoryRepository _categoryRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
 
-        public GoalService(BudgetDbContext context, IMapper mapper, INotificationService notificationService)
+        public GoalService(
+            IGoalRepository goalRepository,
+            ITransactionRepository transactionRepository,
+            ICategoryRepository categoryRepository,
+            IUserRepository userRepository,
+            IMapper mapper,
+            INotificationService notificationService)
         {
-            _context = context;
+            _goalRepository = goalRepository;
+            _transactionRepository = transactionRepository;
+            _categoryRepository = categoryRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
             _notificationService = notificationService;
         }
 
         public async Task<List<GoalDto>> GetUserGoalsAsync(string userId)
         {
-            var goals = await _context.Goals
-                .Include(g => g.Wallet)
-                .Where(g => g.Wallet.UserId == userId)
-                .ToListAsync();
-
-            var goalDtos = new List<GoalDto>();
+            var goals = await _goalRepository.GetGoalsWithWalletByUserIdAsync(userId);
             var now = DateTime.UtcNow;
+            var goalDtos = new List<GoalDto>();
 
             foreach (var goal in goals)
-            {
-                var currentAmount = await _context.Transactions
-                    .Where(t =>
-                        t.Type == goal.Type &&
-                        t.CategoryId == goal.CategoryId &&
-                        t.WalletId == goal.WalletId &&
-                        t.Date >= goal.StartDate &&
-                        t.Date <= goal.EndDate)
-                    .SumAsync(t => (decimal?)t.Amount) ?? 0;
 
+                ////////////////
+            {
+                var currentAmount = await _transactionRepository.SumTransactionsAsync(
+                goal.Type, goal.CategoryId, goal.WalletId ?? 0, goal.StartDate, goal.EndDate);
+
+                ////////////////
 
                 var dto = _mapper.Map<GoalDto>(goal);
                 dto.CurrentAmount = currentAmount;
 
-                var category = await _context.Categories.FindAsync(goal.CategoryId);
+                var category = await _categoryRepository.GetCategoryByIdAsync(goal.CategoryId);
                 dto.CategoryName = category?.Name ?? "Unknown";
 
                 dto.IsNearLimit = currentAmount >= 0.8m * goal.TargetAmount;
@@ -68,9 +73,7 @@ namespace BudgetTracker.Infrastructure.Services
             goal.UserId = userId;
             goal.CreatedAt = DateTime.UtcNow;
 
-            _context.Goals.Add(goal);
-            await _context.SaveChangesAsync();
-
+            await _goalRepository.AddGoalAsync(goal);
             await CheckGoalStatusForUser(userId);
 
             return _mapper.Map<GoalDto>(goal);
@@ -78,14 +81,13 @@ namespace BudgetTracker.Infrastructure.Services
 
         public async Task<GoalDto> UpdateGoalAsync(int id, string userId, GoalUpdateDto dto)
         {
-            var goal = await _context.Goals.FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
+            var goal = await _goalRepository.GetGoalByIdAndUserAsync(id, userId);
             if (goal == null) throw new Exception("Goal not found");
 
             _mapper.Map(dto, goal);
             goal.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
-
+            await _goalRepository.UpdateGoalAsync(goal);
             await CheckGoalStatusForUser(userId);
 
             return _mapper.Map<GoalDto>(goal);
@@ -93,45 +95,33 @@ namespace BudgetTracker.Infrastructure.Services
 
         public async Task<bool> DeleteGoalAsync(int id, string userId)
         {
-            var goal = await _context.Goals.FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
-            if (goal == null) return false;
-
-            _context.Goals.Remove(goal);
-            await _context.SaveChangesAsync();
-
-            await CheckGoalStatusForUser(userId);
-
-            return true;
+            var success = await _goalRepository.DeleteGoalAsync(id, userId);
+            if (success)
+                await CheckGoalStatusForUser(userId);
+            return success;
         }
 
         public async Task CheckGoalStatusesAndTriggerNotifications()
         {
-            var goals = await _context.Goals
-                .Include(g => g.Wallet)
-                .Where(g => g.IsActive && g.EndDate != null && g.Wallet != null)
-                .ToListAsync();
-
+            var goals = await _goalRepository.GetActiveGoalsWithWalletAndEndDateAsync();
             var groupedByUser = goals.GroupBy(g => g.UserId);
 
             foreach (var group in groupedByUser)
-            {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == group.Key);
-                if (user == null) continue;
+{
+    var userId = group.Key; // <-- get the userId from the group key
+    var user = await _userRepository.GetByIdAsync(userId);
+    if (user != null)
+        await EvaluateAndNotifyForGoals(group.ToList(), user);
+}
 
-                await EvaluateAndNotifyForGoals(group.ToList(), user);
-            }
         }
 
         public async Task CheckGoalStatusForUser(string userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return;
 
-            var goals = await _context.Goals
-                .Include(g => g.Wallet)
-                .Where(g => g.IsActive && g.UserId == userId && g.EndDate != null)
-                .ToListAsync();
-
+            var goals = await _goalRepository.GetActiveGoalsWithWalletByUserIdAsync(userId);
             await EvaluateAndNotifyForGoals(goals, user);
         }
 
@@ -142,15 +132,7 @@ namespace BudgetTracker.Infrastructure.Services
 
             foreach (var goal in goals)
             {
-                var transactions = await _context.Transactions
-                    .Where(t =>
-                        t.Type == "expense" &&
-                        t.CategoryId == goal.CategoryId &&
-                        t.WalletId == goal.WalletId &&
-                        t.Date >= goal.StartDate &&
-                        t.Date <= goal.EndDate)
-                    .ToListAsync();
-
+                var transactions = await _transactionRepository.GetTransactionsForGoalProgressAsync(goal);
                 var currentAmount = transactions.Sum(t => t.Amount);
                 var progress = currentAmount / goal.TargetAmount;
 

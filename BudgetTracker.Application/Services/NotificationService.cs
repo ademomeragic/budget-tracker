@@ -1,24 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using BudgetTracker.Application.Dtos;
 using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using BudgetTracker.Domain.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace BudgetTracker.Infrastructure.Services
+namespace BudgetTracker.Application.Services
 {
     public class NotificationService : INotificationService
     {
-        private readonly BudgetDbContext _context;
+        private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
 
-        public NotificationService(BudgetDbContext context, IMapper mapper)
+        public NotificationService(INotificationRepository notificationRepository, IMapper mapper)
         {
-            _context = context;
+            _notificationRepository = notificationRepository;
             _mapper = mapper;
         }
 
@@ -32,38 +31,32 @@ namespace BudgetTracker.Infrastructure.Services
                 IsRead = false
             };
 
-            _context.Notifications.Add(notification);
-            await _context.SaveChangesAsync();
+            await _notificationRepository.AddNotificationAsync(notification);
         }
 
         public async Task<List<NotificationDto>> GetUserNotificationsAsync(string userId)
         {
-            var notifications = await _context.Notifications
-                .Where(n => n.UserId == userId)
-                .OrderByDescending(n => n.CreatedAt)
-                .ToListAsync();
-
+            var notifications = await _notificationRepository.GetNotificationsByUserIdAsync(userId);
             return _mapper.Map<List<NotificationDto>>(notifications);
         }
 
         public async Task MarkAsReadAsync(int notificationId)
         {
-            var notification = await _context.Notifications.FindAsync(notificationId);
+            var notification = await _notificationRepository.GetNotificationByIdAsync(notificationId);
             if (notification != null)
             {
                 notification.IsRead = true;
-                await _context.SaveChangesAsync();
-            }
-        }
-        public async Task DeleteNotificationAsync(int notificationId)
-        {
-            var notification = await _context.Notifications.FindAsync(notificationId);
-            if (notification != null)
-            {
-                _context.Notifications.Remove(notification);
-                await _context.SaveChangesAsync();
+                await _notificationRepository.UpdateNotificationAsync(notification);
             }
         }
 
+        public async Task DeleteNotificationAsync(int notificationId)
+        {
+            var notification = await _notificationRepository.GetNotificationByIdAsync(notificationId);
+            if (notification != null)
+            {
+                await _notificationRepository.DeleteNotificationAsync(notification);
+            }
+        }
     }
 }

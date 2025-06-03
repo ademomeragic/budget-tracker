@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using BudgetTracker.Application.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace BudgetTracker.Infrastructure.Services
+namespace BudgetTracker.Application.Services
 {
     public class ExchangeRateService : IExchangeRateService
     {

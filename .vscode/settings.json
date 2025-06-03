@@ -1,0 +1,7 @@
+{
+  "dotnet-test-explorer.testProjectPath": "**/*Tests.csproj",
+  "dotnet-test-explorer.testExplorerLogLevel": "debug",
+  "dotnet-test-explorer.showCodeLens": true,
+  "dotnet-test-explorer.runInParallel": true,
+  "dotnet-test-explorer.testRunner": "dotnet-test-xunit"
+}
