@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   updatePassword,
-  updateThreshold,
+  // updateThreshold, // 🔒 Commented out
   fetchUserSettings,
-  updateNotificationPreferences,
+  // updateNotificationPreferences, // 🔒 Commented out
   fetchRecurringTransactions,
   createRecurringTransaction,
   deleteRecurringTransaction,
@@ -48,13 +48,15 @@ const ProfilePage = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [threshold, setThreshold] = useState(80);
+  // const [threshold, setThreshold] = useState(80); // 🔒 Commented out
+  /*
   const [preferences, setPreferences] = useState({
     deadlineWarnings: true,
     nearLimitWarnings: true,
     exceededWarnings: true,
     incomeCongratulations: true,
   });
+  */
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [recurringList, setRecurringList] = useState([]);
@@ -74,8 +76,8 @@ const ProfilePage = () => {
     const load = async () => {
       try {
         const settings = await fetchUserSettings();
-        setThreshold(settings.threshold);
-        if (settings.preferences) setPreferences(settings.preferences);
+        // setThreshold(settings.threshold); // 🔒 Commented out
+        // if (settings.preferences) setPreferences(settings.preferences); // 🔒
       } catch {
         setError("Failed to load settings.");
       }
@@ -97,20 +99,19 @@ const ProfilePage = () => {
   }, []);
 
   useEffect(() => {
-  const loadCategories = async () => {
-    try {
-      const cats = await fetchCategoriesByType(recForm.type as "income" | "expense");
-      setCategories(cats);
-      if (cats.length > 0) {
-        setRecForm(prev => ({ ...prev, categoryId: cats[0].id }));
+    const loadCategories = async () => {
+      try {
+        const cats = await fetchCategoriesByType(recForm.type as "income" | "expense");
+        setCategories(cats);
+        if (cats.length > 0) {
+          setRecForm(prev => ({ ...prev, categoryId: cats[0].id }));
+        }
+      } catch {
+        console.error("Failed to fetch categories");
       }
-    } catch {
-      console.error("Failed to fetch categories");
-    }
-  };
-
-  loadCategories();
-}, [recForm.type]);
+    };
+    loadCategories();
+  }, [recForm.type]);
 
   const handlePasswordChange = async () => {
     try {
@@ -123,6 +124,7 @@ const ProfilePage = () => {
     }
   };
 
+  /*
   const handleThresholdChange = async () => {
     try {
       await updateThreshold(threshold);
@@ -144,6 +146,11 @@ const ProfilePage = () => {
       setMessage("");
     }
   };
+
+  const toggle = (key: keyof typeof preferences) => {
+    setPreferences({ ...preferences, [key]: !preferences[key] });
+  };
+  */
 
   const handleRecurringSubmit = async () => {
     try {
@@ -193,19 +200,14 @@ const ProfilePage = () => {
   };
 
   const handleDelete = async (id: number) => {
-  if (!id) {
-    console.error("❌ Attempted to delete recurring transaction without valid ID");
-    return;
-  }
-  console.log("🗑️ Deleting recurring transaction with ID:", id);
-  await deleteRecurringTransaction(id);
-  const refreshed = await fetchRecurringTransactions();
-  setRecurringList(refreshed);
-  };
-
-
-  const toggle = (key: keyof typeof preferences) => {
-    setPreferences({ ...preferences, [key]: !preferences[key] });
+    if (!id) {
+      console.error("❌ Attempted to delete recurring transaction without valid ID");
+      return;
+    }
+    console.log("🗑️ Deleting recurring transaction with ID:", id);
+    await deleteRecurringTransaction(id);
+    const refreshed = await fetchRecurringTransactions();
+    setRecurringList(refreshed);
   };
 
   return (
@@ -215,11 +217,19 @@ const ProfilePage = () => {
       <div className="profile-section">
         <h3>Settings</h3>
         <div className="profile-form">
+          {/* 
           <label>Notification Threshold (%)</label>
-          <input type="number" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} min={10} max={100} />
+          <input
+            type="number"
+            value={threshold}
+            onChange={(e) => setThreshold(Number(e.target.value))}
+            min={10}
+            max={100}
+          />
           <button onClick={handleThresholdChange}>Update Threshold</button>
+          */}
 
-          <label style={{ marginTop: "20px" }}>Preferred Currency</label>
+          <label>Preferred Currency</label>
           <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="currency-dropdown">
             {currencyOptions.map((opt) => (
               <option key={opt.code} value={opt.code}>
@@ -230,6 +240,7 @@ const ProfilePage = () => {
         </div>
       </div>
 
+      {/*
       <div className="profile-section">
         <h3>Notifications</h3>
         <div className="profile-form">
@@ -242,121 +253,91 @@ const ProfilePage = () => {
           <button onClick={handlePreferencesChange}>Update Preferences</button>
         </div>
       </div>
+      */}
 
       <div className="profile-section">
         <h3>Recurring Transactions</h3>
         <div className="profile-form">
           <label>Amount</label>
-          <input
-            type="number"
-            placeholder="Amount"
-            value={recForm.amount}
-            onChange={(e) => setRecForm({ ...recForm, amount: e.target.value })}
-          />
+          <input type="number" placeholder="Amount" value={recForm.amount} onChange={(e) => setRecForm({ ...recForm, amount: e.target.value })} />
 
           <label>Description</label>
-          <input
-            type="text"
-            placeholder="Description"
-            value={recForm.description}
-            onChange={(e) => setRecForm({ ...recForm, description: e.target.value })}
-          />
+          <input type="text" placeholder="Description" value={recForm.description} onChange={(e) => setRecForm({ ...recForm, description: e.target.value })} />
 
           <label>Type</label>
-          <select
-            value={recForm.type}
-            onChange={(e) =>
-            setRecForm({ ...recForm, type: e.target.value as "income" | "expense" })
-          }
-          >
+          <select value={recForm.type} onChange={(e) => setRecForm({ ...recForm, type: e.target.value as "income" | "expense" })}>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
 
           <label>Next Run Date</label>
-          <input
-            type="date"
-            value={recForm.nextRunDate}
-            onChange={(e) => setRecForm({ ...recForm, nextRunDate: e.target.value })}
-          />
+          <input type="date" value={recForm.nextRunDate} onChange={(e) => setRecForm({ ...recForm, nextRunDate: e.target.value })} />
 
           <label>Frequency</label>
-          <select
-          value={recForm.frequency}
-          onChange={(e) => setRecForm({ ...recForm, frequency: e.target.value })}
-          >
+          <select value={recForm.frequency} onChange={(e) => setRecForm({ ...recForm, frequency: e.target.value })}>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
           </select>
 
           <label>Wallet</label>
-          <select
-            value={recForm.walletId}
-            onChange={(e) => setRecForm({ ...recForm, walletId: Number(e.target.value) })}
-          >
+          <select value={recForm.walletId} onChange={(e) => setRecForm({ ...recForm, walletId: Number(e.target.value) })}>
             <option value="">Select Wallet</option>
             {wallets.map((wallet: any) => (
-              <option key={wallet.id} value={wallet.id}>
-                {wallet.name}
-              </option>
+              <option key={wallet.id} value={wallet.id}>{wallet.name}</option>
             ))}
           </select>
 
           <label>Category</label>
-          <select
-            value={recForm.categoryId}
-            onChange={(e) => setRecForm({ ...recForm, categoryId: Number(e.target.value) })}
-          >
+          <select value={recForm.categoryId} onChange={(e) => setRecForm({ ...recForm, categoryId: Number(e.target.value) })}>
             <option value="">Select Category</option>
             {categories.map((cat: any) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
 
-    <button onClick={handleRecurringSubmit}>
-      {isEditing ? "Update Recurring" : "Add Recurring"}
-    </button>
-  </div>
+          <button onClick={handleRecurringSubmit}>
+            {isEditing ? "Update Recurring" : "Add Recurring"}
+          </button>
+        </div>
 
-  {recurringList.length > 0 && (
-   <div className="recurring-table-wrapper"> 
-    <table className="recurring-table">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Amount</th>
-          <th>Description</th>
-          <th>Next Run</th>
-          <th>Frequency</th>
-          <th>Wallet</th>
-          <th>Category</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {recurringList.map((r: any) => (
-          <tr key={r.id}>
-            <td>{r.type}</td>
-            <td>{r.amount}</td>
-            <td>{r.description}</td>
-            <td>{new Date(r.nextRunDate).toLocaleDateString()}</td>
-            <td>{r.frequency}</td>
-            <td>{wallets.find(w => w.id === r.walletId)?.name || r.walletId}</td>
-            <td>{categories.find(c => c.id === r.categoryId)?.name || r.categoryId}</td>
-            <td>
-              <button onClick={() => handleEdit(r)}>✏️</button>
-              <button onClick={() => handleDelete(r.id)}>🗑️</button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-   </div>
-  )}
-</div>
+        {recurringList.length > 0 && (
+          <div className="recurring-table-wrapper">
+            <table className="recurring-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                  <th>Next Run</th>
+                  <th>Frequency</th>
+                  <th>Wallet</th>
+                  <th>Category</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recurringList.map((r: any) => (
+                  <tr key={r.id}>
+                    <td>{r.type}</td>
+                    <td>{r.amount}</td>
+                    <td>{r.description}</td>
+                    <td>{new Date(r.nextRunDate).toLocaleDateString()}</td>
+                    <td>{r.frequency}</td>
+                    <td>{wallets.find(w => w.id === r.walletId)?.name || r.walletId}</td>
+                    <td>{categories.find(c => c.id === r.categoryId)?.name || r.categoryId}</td>
+                    <td>
+                      <button onClick={() => handleEdit(r)}>✏️</button>
+                      <button onClick={() => handleDelete(r.id)}>🗑️</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <div className="profile-section">
         <h3>Change Password</h3>
         <div className="profile-form">

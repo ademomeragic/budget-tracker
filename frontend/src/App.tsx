@@ -3,7 +3,6 @@ import Sidebar from "./components/sidebar/sidebar";
 import Dashboard from "./pages/dashboard/dashboard";
 import "./App.css";
 import FloatingActionButton from "./components/sidebar/floatingButton/floatingButton";
-import Transactions from "./pages/transaction/transaction";
 import Wallet from "./pages/wallet/wallet";
 import Reports from "./pages/reports/reports";
 import Calendar from "./pages/calendar/calendar";

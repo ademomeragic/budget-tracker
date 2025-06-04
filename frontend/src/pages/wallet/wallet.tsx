@@ -41,6 +41,7 @@ export default function Wallet() {
   const loadWallets = async () => {
   try {
     const data = await fetchWallets();
+console.log("Wallets from backend:", data);
 
     // Normalize balance structure
 const normalized = data.map((w: any) => ({
@@ -49,8 +50,9 @@ const normalized = data.map((w: any) => ({
   originalBalance: w.originalBalance ?? w.OriginalBalance ?? w.balance ?? w.Balance ?? 0,
   convertedBalance: w.convertedBalance ?? w.ConvertedBalance,
   currency: w.currency ?? w.Currency ?? "BAM",
-  type: w.type ?? "account",
+  type: (w.type ?? w.Type ?? "").toLowerCase(),
 }));
+
 
 
 

@@ -87,7 +87,8 @@ namespace BudgetTracker.Api.Controllers
                     w.Name,
                     OriginalBalance = w.Balance,
                     ConvertedBalance = Math.Round(w.Balance * rate, 2),
-                    Currency = currency.ToUpper()
+                    Currency = currency.ToUpper(),
+                    Type = w.Type
                 });
             }
             catch (Exception ex)

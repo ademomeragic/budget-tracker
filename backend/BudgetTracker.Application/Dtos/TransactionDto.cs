@@ -14,7 +14,7 @@ namespace BudgetTracker.Application.Dtos
         public string Type { get; set; } = string.Empty;
         public int CategoryId { get; set; }
         public int WalletId { get; set; }
-        public string CategoryName { get; set; }
+        public string? CategoryName { get; set; }
     }
 
 }

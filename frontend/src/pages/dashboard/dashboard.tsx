@@ -225,6 +225,15 @@ useEffect(() => {
   };
 
   const handleAddTransaction = async () => {
+    console.log("Payload being sent:", {
+    amount: parseFloat(newTransaction.amount),
+    date: newTransaction.date,
+    description: newTransaction.description,
+    type: newTransaction.type,
+    categoryId: selectedCategoryId,
+    walletId: selectedWalletId,
+    });
+
     if (!newTransaction.amount || !newTransaction.date) return;
     if (!validateDate(newTransaction.date)) {
       setDateError(`Date must be in ${monthName} ${year}`);
@@ -419,21 +428,20 @@ const pieChartData = currentMonthData.transactions
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Wallet</label>
+             <div className="form-group">
+              <label>Wallet</label>
                 <select
-                  value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(parseInt(e.target.value))}
+                  value={selectedWalletId}
+                  onChange={(e) => setSelectedWalletId(parseInt(e.target.value))}
                 >
-                  {categories
-                    .filter((cat) => cat.type === newTransaction.type) // ← just here
-                    .map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                  ))} 
+                {wallets.map((wallet) => (
+              <option key={wallet.id} value={wallet.id}>
+                {wallet.name}
+              </option>
+                ))}
                 </select>
-              </div>
+            </div>
+
               <div className="form-group">
                 <label>Scan Receipt (Image Upload)</label>
                 <input type="file" accept="image/*,application/pdf" onChange={handleReceiptUpload} />
