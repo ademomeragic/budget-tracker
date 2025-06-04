@@ -1,4 +1,5 @@
-﻿using BudgetTracker.Infrastructure;
+﻿using BudgetTracker.Api.Middleware;
+using BudgetTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using BudgetTracker.Application.MappingProfiles;
 using BudgetTracker.Application.Interfaces;
@@ -136,6 +137,9 @@ app.Use(async (context, next) =>
     logger.LogInformation("[REQUEST] {Method} {Path}", context.Request.Method, context.Request.Path);
     await next();
 });
+
+app.UseMiddleware<BudgetTracker.Api.Middleware.ErrorHandlingMiddleware>();
+app.UseMiddleware<BudgetTracker.Api.Middleware.RequestLoggingMiddleware>();
 
 app.UseCors("AllowFrontend");
 
